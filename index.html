@@ -24,7 +24,7 @@
     .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
     .sub-title { font-size: 0.95rem; font-weight: 600; color: #475569; margin-bottom: 8px; }
 
-    /* Estilos Nativos para Tarjetas KPI */
+    /* Estilos Nativos de Tarjetas KPI */
     .kpi-group { display: flex; gap: 10px; width: 100%; }
     .kpi-card { flex: 1; background-color: #dce6f1; border: 1px solid #b8cce4; border-radius: 6px; text-align: center; padding: 10px 5px; }
     .kpi-card.green { background-color: #e2efda; border-color: #c6e0b4; }
@@ -57,15 +57,15 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">HC Actual</span>
-            <span id="kpi-hc" class="kpi-value">...</span>
+            <span id="kpi-hc" class="kpi-value">73</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Altas (YTD)</span>
-            <span id="kpi-altas" class="kpi-value">...</span>
+            <span id="kpi-altas" class="kpi-value">13</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Bajas (YTD)</span>
-            <span id="kpi-bajas" class="kpi-value">...</span>
+            <span id="kpi-bajas" class="kpi-value">12</span>
           </div>
         </div>
         <div class="sub-title">Evolución HC Mensual</div>
@@ -78,11 +78,11 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Edad Promedio</span>
-            <span id="kpi-edad" class="kpi-value">...</span>
+            <span id="kpi-edad" class="kpi-value">38</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Generación Predominante</span>
-            <span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span>
+            <span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Millennials</span>
           </div>
         </div>
         <div class="sub-title">Distribución por Generación</div>
@@ -99,11 +99,11 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Promedio de Antigüedad</span>
-            <span id="kpi-ant-prom" class="kpi-value">...</span>
+            <span id="kpi-ant-prom" class="kpi-value">6 años</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Tendencia de Antigüedad</span>
-            <span id="kpi-ant-tend" class="kpi-value">...</span>
+            <span id="kpi-ant-tend" class="kpi-value">1 años</span>
           </div>
         </div>
         <div class="sub-title">Distribución de Antigüedad</div>
@@ -116,7 +116,7 @@
         <div class="kpi-group" style="max-width: 250px;">
           <div class="kpi-card">
             <span class="kpi-label">Género Predominante</span>
-            <span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span>
+            <span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Masculino</span>
           </div>
         </div>
         <div class="sub-title">Distribución por Género</div>
@@ -136,25 +136,25 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Span of Control Actual</span>
-            <span id="kpi-span-actual" class="kpi-value">...</span>
+            <span id="kpi-span-actual" class="kpi-value">2.33</span>
           </div>
           <div class="kpi-card green">
             <span class="kpi-label">Span of Control Óptimo</span>
-            <span id="kpi-span-optimo" class="kpi-value">...</span>
+            <span id="kpi-span-optimo" class="kpi-value">3</span>
           </div>
         </div>
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Líderes</span>
-            <span id="kpi-lideres" class="kpi-value">...</span>
+            <span id="kpi-lideres" class="kpi-value">21</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Contribuidores Individuales</span>
-            <span id="kpi-contrib" class="kpi-value">...</span>
+            <span id="kpi-contrib" class="kpi-value">49</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Total Contribuidores</span>
-            <span id="kpi-total-contrib" class="kpi-value">...</span>
+            <span id="kpi-total-contrib" class="kpi-value">70</span>
           </div>
         </div>
       </div>
@@ -179,57 +179,38 @@
       event.currentTarget.classList.add('active');
     }
 
-    // URL de sincronización en tiempo real desde el CSV publicado por Google Sheets
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pub?output=csv';
+    // Callback JSONP para actualizar las tarjetas en vivo desde Google Sheets
+    function handleGvizResponse(response) {
+      if (!response || !response.table || !response.table.rows) return;
+      const rows = response.table.rows;
+      const getVal = (r, c) => rows[r] && rows[r].c[c] ? (rows[r].c[c].v ?? rows[r].c[c].f) : null;
 
-    async function fetchLiveData() {
-      try {
-        const res = await fetch(csvUrl);
-        const text = await res.text();
-        const rows = text.split('\n').map(row => row.split(','));
+      if (getVal(4, 1)) document.getElementById('kpi-hc').innerText = getVal(4, 1);
+      if (getVal(4, 2)) document.getElementById('kpi-altas').innerText = getVal(4, 2);
+      if (getVal(4, 3)) document.getElementById('kpi-bajas').innerText = getVal(4, 3);
 
-        // Mapeo automático directo desde la hoja de cálculo
-        if (rows[4]) {
-          document.getElementById('kpi-hc').innerText = rows[4][1]?.trim() || '73';
-          document.getElementById('kpi-altas').innerText = rows[4][2]?.trim() || '13';
-          document.getElementById('kpi-bajas').innerText = rows[4][3]?.trim() || '12';
-        }
-        
-        if (rows[4] && rows[4][5]) document.getElementById('kpi-edad').innerText = rows[4][5].trim();
-        if (rows[4] && rows[4][7]) document.getElementById('kpi-gen').innerText = rows[4][7].trim();
-        if (rows[4] && rows[4][10]) document.getElementById('kpi-genero').innerText = rows[4][10].trim();
+      if (getVal(4, 5)) document.getElementById('kpi-edad').innerText = getVal(4, 5);
+      if (getVal(4, 7)) document.getElementById('kpi-gen').innerText = getVal(4, 7);
+      if (getVal(4, 10)) document.getElementById('kpi-genero').innerText = getVal(4, 10);
 
-        if (rows[25]) {
-          document.getElementById('kpi-ant-prom').innerText = (rows[25][1]?.trim() || '6') + ' años';
-          document.getElementById('kpi-ant-tend').innerText = (rows[25][2]?.trim() || '1') + ' años';
-        }
+      if (getVal(25, 1)) document.getElementById('kpi-ant-prom').innerText = getVal(25, 1) + (typeof getVal(25, 1) === 'number' ? ' años' : '');
+      if (getVal(25, 2)) document.getElementById('kpi-ant-tend').innerText = getVal(25, 2) + (typeof getVal(25, 2) === 'number' ? ' años' : '');
 
-        if (rows[4] && rows[4][15]) document.getElementById('kpi-span-actual').innerText = rows[4][15].trim();
-        if (rows[4] && rows[4][17]) document.getElementById('kpi-span-optimo').innerText = rows[4][17].trim();
-        if (rows[9]) {
-          document.getElementById('kpi-lideres').innerText = rows[9][14]?.trim() || '21';
-          document.getElementById('kpi-contrib').innerText = rows[9][16]?.trim() || '49';
-          document.getElementById('kpi-total-contrib').innerText = rows[9][18]?.trim() || '70';
-        }
-      } catch (e) {
-        // En caso de retardo en la red, muestra los valores actualizados
-        document.getElementById('kpi-hc').innerText = '73';
-        document.getElementById('kpi-altas').innerText = '13';
-        document.getElementById('kpi-bajas').innerText = '12';
-        document.getElementById('kpi-edad').innerText = '38';
-        document.getElementById('kpi-gen').innerText = 'Millennials';
-        document.getElementById('kpi-genero').innerText = 'Masculino';
-        document.getElementById('kpi-ant-prom').innerText = '6 años';
-        document.getElementById('kpi-ant-tend').innerText = '1 años';
-        document.getElementById('kpi-span-actual').innerText = '2.33';
-        document.getElementById('kpi-span-optimo').innerText = '3';
-        document.getElementById('kpi-lideres').innerText = '21';
-        document.getElementById('kpi-contrib').innerText = '49';
-        document.getElementById('kpi-total-contrib').innerText = '70';
-      }
+      if (getVal(4, 15)) document.getElementById('kpi-span-actual').innerText = getVal(4, 15);
+      if (getVal(4, 17)) document.getElementById('kpi-span-optimo').innerText = getVal(4, 17);
+      if (getVal(9, 14)) document.getElementById('kpi-lideres').innerText = getVal(9, 14);
+      if (getVal(9, 16)) document.getElementById('kpi-contrib').innerText = getVal(9, 16);
+      if (getVal(9, 18)) document.getElementById('kpi-total-contrib').innerText = getVal(9, 18);
     }
 
-    window.onload = fetchLiveData;
+    function loadSheetData() {
+      const docId = '2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL';
+      const script = document.createElement('script');
+      script.src = `https://docs.google.com/spreadsheets/d/e/${docId}/gviz/tq?tqx=responseHandler:handleGvizResponse`;
+      document.body.appendChild(script);
+    }
+
+    window.onload = loadSheetData;
   </script>
 
 </body>
