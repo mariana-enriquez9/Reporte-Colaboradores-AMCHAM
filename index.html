@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Interactivo - Colaboradores</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background-color: #f1f5f9; color: #1e293b; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+
+    header { width: 100%; max-width: 1300px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #cbd5e1; }
+    h1 { font-size: 1.5rem; color: #0f172a; }
+    
+    .nav-tabs { display: flex; gap: 10px; }
+    .tab-btn { background: #e2e8f0; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569; transition: all 0.2s ease; }
+    .tab-btn.active { background: #2563eb; color: #ffffff; }
+
+    .slide { display: none; width: 100%; max-width: 1300px; gap: 20px; flex-direction: column; }
+    .slide.active { display: flex; }
+
+    /* Layout en cuadrícula */
+    .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
+
+    /* Tarjeta contenedora individual */
+    .card-block { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; gap: 15px; }
+    .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+    .sub-title { font-size: 0.95rem; font-weight: 600; color: #475569; margin-bottom: 8px; }
+
+    /* Estilos Nativos para Tarjetas KPI */
+    .kpi-group { display: flex; gap: 10px; width: 100%; }
+    .kpi-card { flex: 1; background-color: #dce6f1; border: 1px solid #b8cce4; border-radius: 6px; text-align: center; padding: 10px 5px; }
+    .kpi-card.green { background-color: #e2efda; border-color: #c6e0b4; }
+    .kpi-label { display: block; font-size: 0.75rem; color: #333; margin-bottom: 4px; font-weight: 500; }
+    .kpi-value { display: block; font-size: 1.3rem; font-weight: bold; color: #1e293b; }
+
+    iframe { width: 100%; border: none; border-radius: 6px; overflow: hidden; }
+    .iframe-chart { height: 300px; }
+    .iframe-chart-pie { height: 280px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>REPORTE EJECUTIVO DE COLABORADORES AMCHAM</h1>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchSlide(1)">Headcount & Demografía</button>
+      <button class="tab-btn" onclick="switchSlide(2)">Span of Control & Rotación</button>
+    </div>
+  </header>
+
+  <main id="slide1" class="slide active">
+    
+    <div class="grid-layout">
+      
+      <div class="card-block">
+        <div class="block-title">Métricas de Headcount</div>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">HC Actual</span>
+            <span class="kpi-value">70</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Altas (YTD)</span>
+            <span class="kpi-value">8</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Bajas (YTD)</span>
+            <span class="kpi-value">10</span>
+          </div>
+        </div>
+        <div class="sub-title">Evolución HC Mensual</div>
+        <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
+      </div>
+
+      <div class="card-block">
+        <div class="block-title">Composición HC - Generación</div>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Edad Promedio</span>
+            <span class="kpi-value">38</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Generación Predominante</span>
+            <span class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Millennials</span>
+          </div>
+        </div>
+        <div class="sub-title">Distribución por Generación</div>
+        <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=259479833&format=interactive"></iframe>
+      </div>
+
+    </div>
+
+    <div class="grid-layout">
+      
+      <div class="card-block">
+        <div class="block-title">Antigüedad</div>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Promedio de Antigüedad</span>
+            <span class="kpi-value">6 años</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Tendencia de Antigüedad</span>
+            <span class="kpi-value">1 años</span>
+          </div>
+        </div>
+        <div class="sub-title">Distribución de Antigüedad</div>
+        <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
+      </div>
+
+      <div class="card-block">
+        <div class="block-title">Composición HC - Género</div>
+        <div class="kpi-group" style="max-width: 250px;">
+          <div class="kpi-card">
+            <span class="kpi-label">Género Predominante</span>
+            <span class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Masculino</span>
+          </div>
+        </div>
+        <div class="sub-title">Distribución por Género</div>
+        <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=384621772&format=interactive"></iframe>
+      </div>
+
+    </div>
+
+  </main>
+
+  <main id="slide2" class="slide">
+    
+    <div class="card-block">
+      <div class="block-title">Span of Control</div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Span of Control Actual</span>
+            <span class="kpi-value">2.33</span>
+          </div>
+          <div class="kpi-card green">
+            <span class="kpi-label">Span of Control Óptimo</span>
+            <span class="kpi-value">3</span>
+          </div>
+        </div>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Líderes</span>
+            <span class="kpi-value">21</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Contribuidores Individuales</span>
+            <span class="kpi-value">49</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Total Contribuidores</span>
+            <span class="kpi-value">70</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-block">
+      <div class="block-title">Tasa de Rotación y Análisis de Bajas</div>
+      <div class="grid-layout">
+        <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1896164123&format=interactive"></iframe>
+        <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1232059089&format=interactive"></iframe>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    function switchSlide(slideNumber) {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(`slide${slideNumber}`).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
