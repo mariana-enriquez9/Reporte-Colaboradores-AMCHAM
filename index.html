@@ -50,11 +50,13 @@
 
   <!-- ================= SLIDE 1 ================= -->
   <main id="slide1" class="slide active">
+
     <div class="grid-layout">
+      <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Conectando...</span>
+          <span class="last-update" id="last-update">Sincronizando...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card"><span class="kpi-label">HC Actual</span><span id="kpi-hc" class="kpi-value">...</span></div>
@@ -64,6 +66,8 @@
         <div class="sub-title">Evolución HC Mensual</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
       </div>
+
+      <!-- 2. BLOQUE GENERACIÓN -->
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
         <div class="kpi-group">
@@ -74,7 +78,9 @@
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=259479833&format=interactive"></iframe>
       </div>
     </div>
+
     <div class="grid-layout">
+      <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
@@ -84,6 +90,8 @@
         <div class="sub-title">Distribución de Antigüedad</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
       </div>
+
+      <!-- 4. BLOQUE GÉNERO -->
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
         <div class="kpi-group" style="max-width: 250px;">
@@ -93,6 +101,7 @@
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=384621772&format=interactive"></iframe>
       </div>
     </div>
+
   </main>
 
   <!-- ================= SLIDE 2 ================= -->
@@ -111,6 +120,7 @@
         </div>
       </div>
     </div>
+
     <div class="card-block">
       <div class="block-title">Tasa de Rotación y Análisis de Bajas</div>
       <div class="grid-layout">
@@ -121,10 +131,7 @@
   </main>
 
   <script>
-    // Enlace público publicado para saltarnos los bloqueos de Google
-    const PACX_ID = "2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL";
-    const GID_CALC = "1138241088";
-    const GID_SOC = "530067332";
+    const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
 
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
@@ -140,98 +147,74 @@
       }
     }
 
-    // Convertidor de CSV resistente
-    function parseCSV(text) {
-      const rows = [];
-      let row = [], current = '';
-      let quotes = false;
-      for (let i = 0; i < text.length; i++) {
-        let char = text[i];
-        if (char === '"') {
-          quotes = !quotes;
-        } else if (char === ',' && !quotes) {
-          row.push(current.trim());
-          current = '';
-        } else if (char === '\n' && !quotes) {
-          row.push(current.trim());
-          rows.push(row);
-          row = [];
-          current = '';
-        } else if (char !== '\r') {
-          current += char;
-        }
-      }
-      row.push(current.trim());
-      rows.push(row);
-      return rows;
+    function getV(rows, r, c) {
+      if(!rows || !rows[r] || !rows[r].c || !rows[r].c[c]) return null;
+      const cell = rows[r].c[c];
+      return cell.f !== undefined ? cell.f : cell.v;
     }
 
-    // Escáner infalible que salta celdas vacías
-    function getValueByLabel(rows, labels, exactMatch = false) {
-      const kws = (Array.isArray(labels) ? labels : [labels]).map(k => k.toLowerCase());
-      for (let r = 0; r < rows.length; r++) {
-        for (let c = 0; c < rows[r].length; c++) {
-          const cell = rows[r][c].toLowerCase();
-          if (!cell) continue;
+    // ==========================================
+    // 1. EXTRAE NÚMEROS DE CALC_DATA
+    // ==========================================
+    window.processCalcMain = function(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
+      
+      setVal('kpi-hc', getV(rows, 0, 6)); // G1
+      setVal('kpi-altas', getV(rows, 2, 6)); // G3
+      setVal('kpi-bajas', getV(rows, 3, 6)); // G4
+      setVal('kpi-edad', getV(rows, 5, 6)); // G6
 
-          let isMatch = exactMatch ? kws.includes(cell) : kws.some(kw => cell === kw || cell.includes(kw));
+      setVal('kpi-ant-prom', getV(rows, 6, 9), ' años'); // J7
+      setVal('kpi-ant-tend', getV(rows, 7, 9), ' años'); // J8
 
-          if (isMatch) {
-            // Revisa a la derecha saltando columnas vacías hasta dar con el dato real
-            for (let nc = c + 1; nc < rows[r].length; nc++) {
-              if (rows[r][nc] && rows[r][nc].trim() !== '') {
-                return rows[r][nc];
-              }
-            }
-          }
-        }
-      }
-      return null;
+      const now = new Date();
+      document.getElementById('last-update').innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
+    };
+
+    // ==========================================
+    // 2. EXTRAE TEXTOS (EVITA EL BUG DE GOOGLE)
+    // ==========================================
+    window.processCalcGen = function(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      setVal('kpi-gen', getV(data.table.rows, 0, 0)); // Celda G7
+    };
+
+    window.processCalcGenero = function(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      setVal('kpi-genero', getV(data.table.rows, 0, 0)); // Celda V4
+    };
+
+    // ==========================================
+    // 3. EXTRAE DATOS DE SOC
+    // ==========================================
+    window.processSoC = function(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
+      
+      setVal('kpi-contrib', getV(rows, 3, 1)); // B4
+      setVal('kpi-lideres', getV(rows, 4, 1)); // B5
+      setVal('kpi-total-contrib', getV(rows, 5, 1)); // B6
+
+      setVal('kpi-span-actual', getV(rows, 3, 4)); // E4
+      setVal('kpi-span-optimo', getV(rows, 4, 4)); // E5
+    };
+
+    // MOTOR DE EXTRACCIÓN (100% Seguro para GitHub Pages)
+    function loadGViz(sheet, range, callbackName) {
+      const script = document.createElement('script');
+      // Forzamos a Google a leer con exactitud el rango pedido
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet}&range=${range}&headers=0&tqx=responseHandler:${callbackName}&t=${Date.now()}`;
+      document.body.appendChild(script);
+      script.onload = () => script.remove();
     }
 
-    async function syncLiveData() {
-      try {
-        // --- 1. PROCESAMOS CALC_DATA DESDE EL TEXTO PLANO ---
-        const resCalc = await fetch(`https://docs.google.com/spreadsheets/d/e/${PACX_ID}/pub?gid=${GID_CALC}&single=true&output=csv&t=${Date.now()}`);
-        if (resCalc.ok) {
-          const rowsCalc = parseCSV(await resCalc.text());
-
-          setVal('kpi-hc', getValueByLabel(rowsCalc, ['current hc', 'hc actual', 'hc']));
-          setVal('kpi-altas', getValueByLabel(rowsCalc, ['total altas', 'altas (ytd)']));
-          setVal('kpi-bajas', getValueByLabel(rowsCalc, ['total bajas', 'bajas (ytd)']));
-          setVal('kpi-edad', getValueByLabel(rowsCalc, ['edad promedio']));
-
-          // Aquí ya NO fallará porque el CSV entrega texto puro ("Millennials" / "Masculino")
-          setVal('kpi-gen', getValueByLabel(rowsCalc, ['generación predominante', 'generacion predominante']));
-          setVal('kpi-genero', getValueByLabel(rowsCalc, ['género predominante', 'genero predominante']));
-
-          // Búsqueda exacta para "Promedio" para no confundirlo con "Edad Promedio"
-          const prom = getValueByLabel(rowsCalc, ['promedio'], true);
-          const tend = getValueByLabel(rowsCalc, ['tendencia'], true);
-
-          if (prom) setVal('kpi-ant-prom', prom, ' años');
-          if (tend) setVal('kpi-ant-tend', tend, ' años');
-        }
-
-        // --- 2. PROCESAMOS SOC DESDE EL TEXTO PLANO ---
-        const resSoc = await fetch(`https://docs.google.com/spreadsheets/d/e/${PACX_ID}/pub?gid=${GID_SOC}&single=true&output=csv&t=${Date.now()}`);
-        if (resSoc.ok) {
-          const rowsSoc = parseCSV(await resSoc.text());
-
-          setVal('kpi-contrib', getValueByLabel(rowsSoc, ['contribuidor individual']));
-          setVal('kpi-lideres', getValueByLabel(rowsSoc, ['líder', 'lider']));
-          setVal('kpi-total-contrib', getValueByLabel(rowsSoc, ['suma total']));
-          setVal('kpi-span-actual', getValueByLabel(rowsSoc, ['soc actual']));
-          setVal('kpi-span-optimo', getValueByLabel(rowsSoc, ['soc óptimo', 'soc optimo']));
-        }
-
-        const now = new Date();
-        const updateEl = document.getElementById('last-update');
-        if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
-
-      } catch (error) {
-        console.error("Fallo al actualizar:", error);
-      }
+    function syncLiveData() {
+      // Pedimos los datos en 4 peticiones pequeñas para aislar los textos y evitar que Google los borre
+      loadGViz('Calc_Data', 'A1:K10', 'processCalcMain');  // Lee puros números
+      loadGViz('Calc_Data', 'G7:G7', 'processCalcGen');    // Aísla el texto Millennials
+      loadGViz('Calc_Data', 'V4:V4', 'processCalcGenero'); // Aísla el texto Masculino
+      loadGViz('SoC', 'A1:E10', 'processSoC');             // Lee la pestaña SoC
     }
 
     window.onload = () => {
