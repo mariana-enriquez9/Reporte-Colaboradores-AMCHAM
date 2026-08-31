@@ -56,7 +56,7 @@
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Sincronizando...</span>
+          <span class="last-update" id="last-update">Cargando datos...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card"><span class="kpi-label">HC Actual</span><span id="kpi-hc" class="kpi-value">...</span></div>
@@ -147,93 +147,76 @@
       }
     }
 
-    // Obtiene el texto real de una celda evaluando .f (formato/fórmula) y .v (valor)
-    function getCellText(cell) {
-      if (!cell) return null;
-      if (cell.f !== undefined && cell.f !== null && String(cell.f).trim() !== '') return String(cell.f).trim();
-      if (cell.v !== undefined && cell.v !== null && String(cell.v).trim() !== '') return String(cell.v).trim();
-      return null;
-    }
+    async function syncDataCSV() {
+      try {
+        // --- PROCESAR CALC_DATA ---
+        // Exportamos el CSV y dividimos por líneas
+        const resCalc = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&sheet=Calc_Data&cacheBust=${Date.now()}`);
+        const textCalc = await resCalc.text();
+        
+        // Parseamos el CSV 
+        const rowsCalc = textCalc.split('\n').map(row => {
+          // Separa por comas respetando el texto que está entre comillas (ej. números formateados)
+          const regex = /(".*?"|[^",\s]+)(?=\s*,|\s*$)/g;
+          let match;
+          let columns = [];
+          // Extraemos los valores crudos separados por comas
+          let rawCols = row.split(',');
+          return rawCols.map(c => c.replace(/^"|"$/g, '').trim());
+        });
 
-    // Busca un valor en la fila a la derecha de una etiqueta
-    function findValueByLabel(rows, keywords, exactMatch = false) {
-      const keys = Array.isArray(keywords) ? keywords : [keywords];
+        // Aplicamos el mapeo EXACTO usando los índices que se extraen directamente del CSV (0-indexed)
+        // G1 = Fila 0, Col 6
+        if(rowsCalc[0]) setVal('kpi-hc', rowsCalc[0][6]);
+        // G3 = Fila 2, Col 6
+        if(rowsCalc[2]) setVal('kpi-altas', rowsCalc[2][6]);
+        // G4 = Fila 3, Col 6
+        if(rowsCalc[3]) setVal('kpi-bajas', rowsCalc[3][6]);
+        // G6 = Fila 5, Col 6
+        if(rowsCalc[5]) setVal('kpi-edad', rowsCalc[5][6]);
+        
+        // G7 = Fila 6, Col 6 (Generación predominante)
+        if(rowsCalc[6] && rowsCalc[6][6]) setVal('kpi-gen', rowsCalc[6][6]);
+        // V4 = Fila 3, Col 21 (Género predominante)
+        if(rowsCalc[3] && rowsCalc[3][21]) setVal('kpi-genero', rowsCalc[3][21]);
 
-      for (let r = 0; r < rows.length; r++) {
-        if (!rows[r] || !rows[r].c) continue;
-        for (let c = 0; c < rows[r].c.length; c++) {
-          const text = getCellText(rows[r].c[c]);
-          if (!text) continue;
+        // J7 y J8 (Antigüedad) - Fila 6 y 7, Col 9
+        if(rowsCalc[6] && rowsCalc[6][9]) setVal('kpi-ant-prom', rowsCalc[6][9], ' años');
+        if(rowsCalc[7] && rowsCalc[7][9]) setVal('kpi-ant-tend', rowsCalc[7][9], ' años');
 
-          const lowerText = text.toLowerCase();
-          const isMatch = keys.some(kw => {
-            const lowerKw = kw.toLowerCase();
-            return exactMatch ? lowerText === lowerKw : lowerText.includes(lowerKw);
-          });
 
-          if (isMatch) {
-            for (let nc = c + 1; nc < rows[r].c.length; nc++) {
-              const val = getCellText(rows[r].c[nc]);
-              if (val !== null) {
-                return val;
-              }
-            }
-          }
+        // --- PROCESAR SOC ---
+        const resSoC = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&sheet=SoC&cacheBust=${Date.now()}`);
+        const textSoC = await resSoC.text();
+        const rowsSoC = textSoC.split('\n').map(row => row.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+
+        // SoC: B4 (Fila 3, Col 1), E4 (Fila 3, Col 4)
+        if(rowsSoC[3]) {
+          setVal('kpi-contrib', rowsSoC[3][1]);
+          setVal('kpi-span-actual', rowsSoC[3][4]);
         }
+        // SoC: B5 (Fila 4, Col 1), E5 (Fila 4, Col 4)
+        if(rowsSoC[4]) {
+          setVal('kpi-lideres', rowsSoC[4][1]);
+          setVal('kpi-span-optimo', rowsSoC[4][4]);
+        }
+        // SoC: B6 (Fila 5, Col 1)
+        if(rowsSoC[5]) {
+          setVal('kpi-total-contrib', rowsSoC[5][1]);
+        }
+
+        const now = new Date();
+        const updateEl = document.getElementById('last-update');
+        if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
+
+      } catch (error) {
+        console.error('Error al sincronizar CSV:', error);
       }
-      return null;
-    }
-
-    function processCalcData(data) {
-      if (!data || !data.table || !data.table.rows) return;
-      const rows = data.table.rows;
-
-      setVal('kpi-hc', findValueByLabel(rows, ['current hc', 'hc actual']));
-      setVal('kpi-altas', findValueByLabel(rows, ['total altas', 'altas']));
-      setVal('kpi-bajas', findValueByLabel(rows, ['total bajas', 'bajas']));
-      setVal('kpi-edad', findValueByLabel(rows, ['edad promedio']));
-
-      setVal('kpi-gen', findValueByLabel(rows, ['generación', 'generacion']));
-      setVal('kpi-genero', findValueByLabel(rows, ['género', 'genero']));
-
-      const antProm = findValueByLabel(rows, ['promedio'], true);
-      const antTend = findValueByLabel(rows, ['tendencia'], true);
-
-      if (antProm !== null) setVal('kpi-ant-prom', antProm, ' años');
-      if (antTend !== null) setVal('kpi-ant-tend', antTend, ' años');
-
-      const now = new Date();
-      const updateEl = document.getElementById('last-update');
-      if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
-    }
-
-    function processSoCData(data) {
-      if (!data || !data.table || !data.table.rows) return;
-      const rows = data.table.rows;
-
-      setVal('kpi-contrib', findValueByLabel(rows, ['contribuidor individual']));
-      setVal('kpi-lideres', findValueByLabel(rows, ['líder', 'lider']));
-      setVal('kpi-total-contrib', findValueByLabel(rows, ['suma total']));
-
-      setVal('kpi-span-actual', findValueByLabel(rows, ['soc actual']));
-      setVal('kpi-span-optimo', findValueByLabel(rows, ['soc óptimo', 'soc optimo']));
-    }
-
-    function syncLiveData() {
-      const scriptCalc = document.createElement('script');
-      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&tqx=responseHandler:processCalcData&t=${Date.now()}`;
-      document.body.appendChild(scriptCalc);
-      scriptCalc.onload = () => scriptCalc.remove();
-
-      const scriptSoC = document.createElement('script');
-      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&tqx=responseHandler:processSoCData&t=${Date.now()}`;
-      document.body.appendChild(scriptSoC);
-      scriptSoC.onload = () => scriptSoC.remove();
     }
 
     window.onload = () => {
-      syncLiveData();
-      setInterval(syncLiveData, 15000);
+      syncDataCSV();
+      setInterval(syncDataCSV, 15000);
     };
   </script>
 
