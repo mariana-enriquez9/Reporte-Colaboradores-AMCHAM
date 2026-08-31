@@ -50,13 +50,11 @@
 
   <!-- ================= SLIDE 1 ================= -->
   <main id="slide1" class="slide active">
-
     <div class="grid-layout">
-      <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Sincronizando...</span>
+          <span class="last-update" id="last-update">Conectando...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card"><span class="kpi-label">HC Actual</span><span id="kpi-hc" class="kpi-value">...</span></div>
@@ -66,8 +64,6 @@
         <div class="sub-title">Evolución HC Mensual</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
       </div>
-
-      <!-- 2. BLOQUE GENERACIÓN -->
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
         <div class="kpi-group">
@@ -78,9 +74,7 @@
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=259479833&format=interactive"></iframe>
       </div>
     </div>
-
     <div class="grid-layout">
-      <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
@@ -90,8 +84,6 @@
         <div class="sub-title">Distribución de Antigüedad</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
       </div>
-
-      <!-- 4. BLOQUE GÉNERO -->
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
         <div class="kpi-group" style="max-width: 250px;">
@@ -101,7 +93,6 @@
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=384621772&format=interactive"></iframe>
       </div>
     </div>
-
   </main>
 
   <!-- ================= SLIDE 2 ================= -->
@@ -120,7 +111,6 @@
         </div>
       </div>
     </div>
-
     <div class="card-block">
       <div class="block-title">Tasa de Rotación y Análisis de Bajas</div>
       <div class="grid-layout">
@@ -131,7 +121,10 @@
   </main>
 
   <script>
-    const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
+    // Enlace público publicado para saltarnos los bloqueos de Google
+    const PACX_ID = "2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL";
+    const GID_CALC = "1138241088";
+    const GID_SOC = "530067332";
 
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
@@ -147,56 +140,47 @@
       }
     }
 
-    function buildGrid(data) {
-      if (!data || !data.table) return [];
-      const grid = [];
-
-      if (data.table.cols && data.table.cols.length > 0) {
-        const colRow = data.table.cols.map(col => {
-          if (!col) return null;
-          return col.label !== undefined && col.label !== null ? col.label : col.id;
-        });
-        grid.push(colRow);
+    // Convertidor de CSV resistente
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], current = '';
+      let quotes = false;
+      for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        if (char === '"') {
+          quotes = !quotes;
+        } else if (char === ',' && !quotes) {
+          row.push(current.trim());
+          current = '';
+        } else if (char === '\n' && !quotes) {
+          row.push(current.trim());
+          rows.push(row);
+          row = [];
+          current = '';
+        } else if (char !== '\r') {
+          current += char;
+        }
       }
-
-      if (data.table.rows && data.table.rows.length > 0) {
-        data.table.rows.forEach(r => {
-          if (!r || !r.c) {
-            grid.push([]);
-            return;
-          }
-          const row = r.c.map(cell => {
-            if (!cell) return null;
-            return cell.f !== undefined && cell.f !== null && String(cell.f).trim() !== '' ? cell.f : cell.v;
-          });
-          grid.push(row);
-        });
-      }
-
-      return grid;
+      row.push(current.trim());
+      rows.push(row);
+      return rows;
     }
 
-    // Busca la etiqueta y SALTA celdas nulas/vacías a la derecha hasta encontrar el valor real
-    function getValueNextTo(grid, labels, exactMatchOnly = false) {
-      const keywords = (Array.isArray(labels) ? labels : [labels]).map(k => String(k).toLowerCase().trim());
+    // Escáner infalible que salta celdas vacías
+    function getValueByLabel(rows, labels, exactMatch = false) {
+      const kws = (Array.isArray(labels) ? labels : [labels]).map(k => k.toLowerCase());
+      for (let r = 0; r < rows.length; r++) {
+        for (let c = 0; c < rows[r].length; c++) {
+          const cell = rows[r][c].toLowerCase();
+          if (!cell) continue;
 
-      for (let r = 0; r < grid.length; r++) {
-        if (!grid[r]) continue;
-        for (let c = 0; c < grid[r].length; c++) {
-          const cellVal = grid[r][c];
-          if (cellVal === null || cellVal === undefined) continue;
-          const str = String(cellVal).toLowerCase().trim();
+          let isMatch = exactMatch ? kws.includes(cell) : kws.some(kw => cell === kw || cell.includes(kw));
 
-          const matched = keywords.some(kw => {
-            return exactMatchOnly ? str === kw : (str === kw || (kw.length > 4 && str.includes(kw)));
-          });
-
-          if (matched) {
-            // Escanea todas las celdas a la derecha saltando las vacías/nulas
-            for (let nc = c + 1; nc < grid[r].length; nc++) {
-              const val = grid[r][nc];
-              if (val !== null && val !== undefined && String(val).trim() !== '') {
-                return val;
+          if (isMatch) {
+            // Revisa a la derecha saltando columnas vacías hasta dar con el dato real
+            for (let nc = c + 1; nc < rows[r].length; nc++) {
+              if (rows[r][nc] && rows[r][nc].trim() !== '') {
+                return rows[r][nc];
               }
             }
           }
@@ -205,51 +189,49 @@
       return null;
     }
 
-    function processCalcData(data) {
-      const grid = buildGrid(data);
-      if (grid.length === 0) return;
+    async function syncLiveData() {
+      try {
+        // --- 1. PROCESAMOS CALC_DATA DESDE EL TEXTO PLANO ---
+        const resCalc = await fetch(`https://docs.google.com/spreadsheets/d/e/${PACX_ID}/pub?gid=${GID_CALC}&single=true&output=csv&t=${Date.now()}`);
+        if (resCalc.ok) {
+          const rowsCalc = parseCSV(await resCalc.text());
 
-      setVal('kpi-hc', getValueNextTo(grid, ['current hc', 'hc actual', 'hc']));
-      setVal('kpi-altas', getValueNextTo(grid, ['total altas', 'altas']));
-      setVal('kpi-bajas', getValueNextTo(grid, ['total bajas', 'bajas']));
-      setVal('kpi-edad', getValueNextTo(grid, ['edad promedio']));
+          setVal('kpi-hc', getValueByLabel(rowsCalc, ['current hc', 'hc actual', 'hc']));
+          setVal('kpi-altas', getValueByLabel(rowsCalc, ['total altas', 'altas (ytd)']));
+          setVal('kpi-bajas', getValueByLabel(rowsCalc, ['total bajas', 'bajas (ytd)']));
+          setVal('kpi-edad', getValueByLabel(rowsCalc, ['edad promedio']));
 
-      setVal('kpi-gen', getValueNextTo(grid, ['generación predominante', 'generacion predominante']));
-      setVal('kpi-genero', getValueNextTo(grid, ['género predominante', 'genero predominante']));
+          // Aquí ya NO fallará porque el CSV entrega texto puro ("Millennials" / "Masculino")
+          setVal('kpi-gen', getValueByLabel(rowsCalc, ['generación predominante', 'generacion predominante']));
+          setVal('kpi-genero', getValueByLabel(rowsCalc, ['género predominante', 'genero predominante']));
 
-      const antProm = getValueNextTo(grid, ['promedio'], true);
-      const antTend = getValueNextTo(grid, ['tendencia'], true);
+          // Búsqueda exacta para "Promedio" para no confundirlo con "Edad Promedio"
+          const prom = getValueByLabel(rowsCalc, ['promedio'], true);
+          const tend = getValueByLabel(rowsCalc, ['tendencia'], true);
 
-      if (antProm !== null) setVal('kpi-ant-prom', antProm, ' años');
-      if (antTend !== null) setVal('kpi-ant-tend', antTend, ' años');
+          if (prom) setVal('kpi-ant-prom', prom, ' años');
+          if (tend) setVal('kpi-ant-tend', tend, ' años');
+        }
 
-      const now = new Date();
-      const updateEl = document.getElementById('last-update');
-      if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
-    }
+        // --- 2. PROCESAMOS SOC DESDE EL TEXTO PLANO ---
+        const resSoc = await fetch(`https://docs.google.com/spreadsheets/d/e/${PACX_ID}/pub?gid=${GID_SOC}&single=true&output=csv&t=${Date.now()}`);
+        if (resSoc.ok) {
+          const rowsSoc = parseCSV(await resSoc.text());
 
-    function processSoCData(data) {
-      const grid = buildGrid(data);
-      if (grid.length === 0) return;
+          setVal('kpi-contrib', getValueByLabel(rowsSoc, ['contribuidor individual']));
+          setVal('kpi-lideres', getValueByLabel(rowsSoc, ['líder', 'lider']));
+          setVal('kpi-total-contrib', getValueByLabel(rowsSoc, ['suma total']));
+          setVal('kpi-span-actual', getValueByLabel(rowsSoc, ['soc actual']));
+          setVal('kpi-span-optimo', getValueByLabel(rowsSoc, ['soc óptimo', 'soc optimo']));
+        }
 
-      setVal('kpi-contrib', getValueNextTo(grid, ['contribuidor individual', 'contribuidores individuales']));
-      setVal('kpi-lideres', getValueNextTo(grid, ['líder', 'lider', 'líderes']));
-      setVal('kpi-total-contrib', getValueNextTo(grid, ['suma total', 'total contribuidores']));
+        const now = new Date();
+        const updateEl = document.getElementById('last-update');
+        if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
 
-      setVal('kpi-span-actual', getValueNextTo(grid, ['soc actual', 'span of control actual']));
-      setVal('kpi-span-optimo', getValueNextTo(grid, ['soc óptimo', 'soc optimo', 'span of control óptimo']));
-    }
-
-    function syncLiveData() {
-      const scriptCalc = document.createElement('script');
-      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&tqx=responseHandler:processCalcData&t=${Date.now()}`;
-      document.body.appendChild(scriptCalc);
-      scriptCalc.onload = () => scriptCalc.remove();
-
-      const scriptSoC = document.createElement('script');
-      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&tqx=responseHandler:processSoCData&t=${Date.now()}`;
-      document.body.appendChild(scriptSoC);
-      scriptSoC.onload = () => scriptSoC.remove();
+      } catch (error) {
+        console.error("Fallo al actualizar:", error);
+      }
     }
 
     window.onload = () => {
