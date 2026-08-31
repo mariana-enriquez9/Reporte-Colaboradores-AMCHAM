@@ -48,33 +48,36 @@
     </div>
   </header>
 
+  <!-- ================= SLIDE 1 ================= -->
   <main id="slide1" class="slide active">
 
     <div class="grid-layout">
 
+      <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Sincronizando...</span>
+          <span class="last-update" id="last-update">Conectando...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">HC Actual</span>
-            <span id="kpi-hc" class="kpi-value">73</span>
+            <span id="kpi-hc" class="kpi-value">70</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Altas (YTD)</span>
-            <span id="kpi-altas" class="kpi-value">13</span>
+            <span id="kpi-altas" class="kpi-value">8</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Bajas (YTD)</span>
-            <span id="kpi-bajas" class="kpi-value">12</span>
+            <span id="kpi-bajas" class="kpi-value">10</span>
           </div>
         </div>
         <div class="sub-title">Evolución HC Mensual</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
       </div>
 
+      <!-- 2. BLOQUE GENERACIÓN -->
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
         <div class="kpi-group">
@@ -95,6 +98,7 @@
 
     <div class="grid-layout">
 
+      <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
@@ -111,6 +115,7 @@
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
       </div>
 
+      <!-- 4. BLOQUE GÉNERO -->
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
         <div class="kpi-group" style="max-width: 250px;">
@@ -127,6 +132,7 @@
 
   </main>
 
+  <!-- ================= SLIDE 2 ================= -->
   <main id="slide2" class="slide">
 
     <div class="card-block">
@@ -171,7 +177,7 @@
 
   <script>
     const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
-    const GID = "622441979";
+    const SHEET_NAME = "Dashboards"; // Nombre exacto de tu pestaña
     const REFRESH_INTERVAL_MS = 60000;
 
     function switchSlide(slideNumber) {
@@ -194,50 +200,44 @@
       if (!data || !data.table || !data.table.rows) return;
       const rows = data.table.rows;
 
+      // Lee el valor (v) o el texto formateado (f) de una celda por su Fila (0-indexed) y Columna (0-indexed)
       const getVal = (r, c) => {
         if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
         const cell = rows[r].c[c];
         return cell.f !== undefined ? cell.f : cell.v;
       };
 
-      // Mapeo flexible por filas
-      for (let r = 0; r < rows.length; r++) {
-        const c0 = String(getVal(r, 0) || '').toLowerCase();
-        const c3 = String(getVal(r, 3) || '').toLowerCase();
+      // Mapeo directo exacto de tu pestaña 'Dashboards'
+      // Fila 5 (índice 4 en JS)
+      setVal('kpi-hc', getVal(4, 1));          // Celda B5 (HC Actual: 70)
+      setVal('kpi-altas', getVal(4, 3));       // Celda D5 (Altas YTD: 8)
+      setVal('kpi-bajas', getVal(4, 4));       // Celda E5 (Bajas YTD: 10)
+      setVal('kpi-edad', getVal(4, 5));        // Celda F5 (Edad Promedio: 38)
+      setVal('kpi-gen', getVal(4, 7));         // Celda H5 (Generación Predominante)
+      setVal('kpi-genero', getVal(4, 10));     // Celda K5 (Género Predominante)
+      setVal('kpi-span-actual', getVal(4, 14)); // Celda O5 (Span Actual: 2.33)
+      setVal('kpi-span-optimo', getVal(4, 17)); // Celda R5 (Span Óptimo: 3)
 
-        if (c0.includes('contribuidor')) setVal('kpi-contrib', getVal(r, 1));
-        if (c0.includes('líder') || c0.includes('lider')) setVal('kpi-lideres', getVal(r, 1));
-        if (c0.includes('total')) setVal('kpi-total-contrib', getVal(r, 1));
+      // Fila 10 (índice 9 en JS)
+      setVal('kpi-lideres', getVal(9, 14));       // Celda O10 (Líderes: 21)
+      setVal('kpi-contrib', getVal(9, 16));       // Celda Q10 (Contribuidores: 49)
+      setVal('kpi-total-contrib', getVal(9, 18)); // Celda S10 (Total: 70)
 
-        if (c3.includes('actual')) setVal('kpi-span-actual', getVal(r, 4));
-        if (c3.includes('óptimo') || c3.includes('optimo')) setVal('kpi-span-optimo', getVal(r, 4));
-      }
-
-      // Lectura directa de índices estándar
-      setVal('kpi-hc', getVal(4, 1));
-      setVal('kpi-altas', getVal(4, 2));
-      setVal('kpi-bajas', getVal(4, 3));
-      setVal('kpi-edad', getVal(4, 5));
-      setVal('kpi-gen', getVal(4, 7));
-      setVal('kpi-genero', getVal(4, 10));
-
-      const antProm = getVal(25, 1);
-      const antTend = getVal(25, 2);
+      // Fila 26 (índice 25 en JS)
+      const antProm = getVal(25, 1); // Celda B26 (Promedio Antigüedad)
+      const antTend = getVal(25, 3); // Celda D26 (Tendencia Antigüedad)
       setVal('kpi-ant-prom', antProm, typeof antProm === 'number' ? ' años' : '');
       setVal('kpi-ant-tend', antTend, typeof antTend === 'number' ? ' años' : '');
 
       const now = new Date();
       const updateEl = document.getElementById('last-update');
-      if (updateEl) updateEl.innerText = `Actualizado en vivo ${now.toLocaleTimeString('es-MX')}`;
+      if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
     function syncLiveData() {
       const script = document.createElement('script');
-      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${GID}&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
-      script.onerror = () => {
-        const updateEl = document.getElementById('last-update');
-        if (updateEl) updateEl.innerText = 'Modo Local / En vivo activo';
-      };
+      // Consultamos directamente por el nombre de la pestaña Dashboards
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
       document.body.appendChild(script);
       script.onload = () => script.remove();
     }
