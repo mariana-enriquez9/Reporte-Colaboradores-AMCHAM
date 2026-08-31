@@ -57,20 +57,20 @@
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Conectando...</span>
+          <span class="last-update" id="last-update">Sincronizando...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">HC Actual</span>
-            <span id="kpi-hc" class="kpi-value">70</span>
+            <span id="kpi-hc" class="kpi-value">73</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Altas (YTD)</span>
-            <span id="kpi-altas" class="kpi-value">8</span>
+            <span id="kpi-altas" class="kpi-value">13</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Bajas (YTD)</span>
-            <span id="kpi-bajas" class="kpi-value">10</span>
+            <span id="kpi-bajas" class="kpi-value">12</span>
           </div>
         </div>
         <div class="sub-title">Evolución HC Mensual</div>
@@ -177,7 +177,7 @@
 
   <script>
     const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
-    const SHEET_NAME = "Dashboards"; // Nombre exacto de tu pestaña
+    const SHEET_NAME = "Calc_Data";
     const REFRESH_INTERVAL_MS = 60000;
 
     function switchSlide(slideNumber) {
@@ -188,58 +188,40 @@
       event.currentTarget.classList.add('active');
     }
 
-    function setVal(id, value, suffix) {
-      if (value === null || value === undefined || value === '') return;
-      const el = document.getElementById(id);
-      if (el) {
-        el.innerText = suffix ? `${value}${suffix}` : value;
+    function setVal(id, val) {
+      if (val !== undefined && val !== null && val !== '') {
+        const el = document.getElementById(id);
+        if (el) el.innerText = String(val).trim();
       }
     }
 
-    function processSheetResponse(data) {
-      if (!data || !data.table || !data.table.rows) return;
-      const rows = data.table.rows;
+    async function syncLiveData() {
+      try {
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&sheet=${encodeURIComponent(SHEET_NAME)}&cacheBust=${Date.now()}`;
+        const response = await fetch(csvUrl);
+        if (!response.ok) throw new Error('Error de red');
 
-      // Lee el valor (v) o el texto formateado (f) de una celda por su Fila (0-indexed) y Columna (0-indexed)
-      const getVal = (r, c) => {
-        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
-        const cell = rows[r].c[c];
-        return cell.f !== undefined ? cell.f : cell.v;
-      };
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '')));
 
-      // Mapeo directo exacto de tu pestaña 'Dashboards'
-      // Fila 5 (índice 4 en JS)
-      setVal('kpi-hc', getVal(4, 1));          // Celda B5 (HC Actual: 70)
-      setVal('kpi-altas', getVal(4, 3));       // Celda D5 (Altas YTD: 8)
-      setVal('kpi-bajas', getVal(4, 4));       // Celda E5 (Bajas YTD: 10)
-      setVal('kpi-edad', getVal(4, 5));        // Celda F5 (Edad Promedio: 38)
-      setVal('kpi-gen', getVal(4, 7));         // Celda H5 (Generación Predominante)
-      setVal('kpi-genero', getVal(4, 10));     // Celda K5 (Género Predominante)
-      setVal('kpi-span-actual', getVal(4, 14)); // Celda O5 (Span Actual: 2.33)
-      setVal('kpi-span-optimo', getVal(4, 17)); // Celda R5 (Span Óptimo: 3)
+        // Mapeo directo exacto de celdas según la captura de Calc_Data:
+        if (rows[0]) setVal('kpi-hc', rows[0][6]);           // Celda G1 (HC Actual)
+        if (rows[2]) setVal('kpi-altas', rows[2][6]);        // Celda G3 (Total Altas)
+        if (rows[3]) setVal('kpi-bajas', rows[3][6]);        // Celda G4 (Total Bajas)
+        if (rows[5]) setVal('kpi-edad', rows[5][6]);         // Celda G6 (Edad Promedio)
+        if (rows[6]) setVal('kpi-gen', rows[6][6]);          // Celda G7 (Generación Predominante)
+        if (rows[4]) setVal('kpi-genero', rows[4][21]);      // Celda V5 (Género Predominante)
 
-      // Fila 10 (índice 9 en JS)
-      setVal('kpi-lideres', getVal(9, 14));       // Celda O10 (Líderes: 21)
-      setVal('kpi-contrib', getVal(9, 16));       // Celda Q10 (Contribuidores: 49)
-      setVal('kpi-total-contrib', getVal(9, 18)); // Celda S10 (Total: 70)
+        if (rows[6]) setVal('kpi-ant-prom', rows[6][10] ? `${rows[6][10]} años` : null); // Celda K7 (Promedio)
+        if (rows[7]) setVal('kpi-ant-tend', rows[7][10] ? `${rows[7][10]} años` : null); // Celda K8 (Tendencia)
 
-      // Fila 26 (índice 25 en JS)
-      const antProm = getVal(25, 1); // Celda B26 (Promedio Antigüedad)
-      const antTend = getVal(25, 3); // Celda D26 (Tendencia Antigüedad)
-      setVal('kpi-ant-prom', antProm, typeof antProm === 'number' ? ' años' : '');
-      setVal('kpi-ant-tend', antTend, typeof antTend === 'number' ? ' años' : '');
+        const now = new Date();
+        const updateEl = document.getElementById('last-update');
+        if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
 
-      const now = new Date();
-      const updateEl = document.getElementById('last-update');
-      if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
-    }
-
-    function syncLiveData() {
-      const script = document.createElement('script');
-      // Consultamos directamente por el nombre de la pestaña Dashboards
-      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
-      document.body.appendChild(script);
-      script.onload = () => script.remove();
+      } catch (err) {
+        console.log('Sincronizando...', err);
+      }
     }
 
     window.onload = () => {
