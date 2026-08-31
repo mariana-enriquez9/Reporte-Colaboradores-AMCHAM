@@ -57,7 +57,7 @@
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Conectando...</span>
+          <span class="last-update" id="last-update">Sincronizando...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card">
@@ -141,25 +141,25 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Span of Control Actual</span>
-            <span id="kpi-span-actual" class="kpi-value">2.33</span>
+            <span id="kpi-span-actual" class="kpi-value">...</span>
           </div>
           <div class="kpi-card green">
             <span class="kpi-label">Span of Control Óptimo</span>
-            <span id="kpi-span-optimo" class="kpi-value">3</span>
+            <span id="kpi-span-optimo" class="kpi-value">...</span>
           </div>
         </div>
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Líderes</span>
-            <span id="kpi-lideres" class="kpi-value">21</span>
+            <span id="kpi-lideres" class="kpi-value">...</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Contribuidores Individuales</span>
-            <span id="kpi-contrib" class="kpi-value">49</span>
+            <span id="kpi-contrib" class="kpi-value">...</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Total Contribuidores</span>
-            <span id="kpi-total-contrib" class="kpi-value">70</span>
+            <span id="kpi-total-contrib" class="kpi-value">...</span>
           </div>
         </div>
       </div>
@@ -177,7 +177,6 @@
 
   <script>
     const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
-    const SHEET_NAME = "Calc_Data";
 
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
@@ -194,63 +193,65 @@
       }
     }
 
-    function processSheetResponse(data) {
-      if (!data || !data.table) return;
-      const rows = data.table.rows || [];
+    // 1. Procesa los datos provenientes de 'Calc_Data'
+    function processCalcData(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
 
-      // Función de rastreo dinámico que encuentra cualquier celda por el texto de su etiqueta
-      function findValueRightOf(labelNeedle) {
-        labelNeedle = labelNeedle.toLowerCase();
-        for (let r = 0; r < rows.length; r++) {
-          if (!rows[r] || !rows[r].c) continue;
-          for (let c = 0; c < rows[r].c.length; c++) {
-            const cell = rows[r].c[c];
-            if (!cell) continue;
-            const text = String(cell.f !== undefined ? cell.f : (cell.v ?? '')).toLowerCase();
-            if (text.includes(labelNeedle)) {
-              // Busca la primera celda con valor hacia la derecha
-              for (let nc = c + 1; nc < rows[r].c.length; nc++) {
-                const target = rows[r].c[nc];
-                if (target && target.v !== null && target.v !== undefined && target.v !== '') {
-                  return target.f !== undefined ? target.f : target.v;
-                }
-              }
-            }
-          }
-        }
-        return null;
-      }
+      const getVal = (r, c) => {
+        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
+        const cell = rows[r].c[c];
+        return cell.f !== undefined ? cell.f : cell.v;
+      };
 
-      // Asignación dinámica basada en las etiquetas reales de Calc_Data
-      const hc = findValueRightOf('current hc') || findValueRightOf('hc actual');
-      const altas = findValueRightOf('total altas') || findValueRightOf('altas');
-      const bajas = findValueRightOf('total bajas') || findValueRightOf('bajas');
-      const edad = findValueRightOf('edad promedio');
-      const gen = findValueRightOf('generación predominante') || findValueRightOf('generacion predominante');
-      const genero = findValueRightOf('género predominante') || findValueRightOf('genero predominante');
-      const antProm = findValueRightOf('promedio');
-      const antTend = findValueRightOf('tendencia');
+      setVal('kpi-hc', getVal(0, 6));           // Celda G1
+      setVal('kpi-altas', getVal(2, 6));        // Celda G3
+      setVal('kpi-bajas', getVal(3, 6));        // Celda G4
+      setVal('kpi-edad', getVal(5, 6));         // Celda G6
+      setVal('kpi-gen', getVal(6, 6));          // Celda G7
+      setVal('kpi-genero', getVal(3, 21));      // Celda V4
 
-      if (hc !== null) setVal('kpi-hc', hc);
-      if (altas !== null) setVal('kpi-altas', altas);
-      if (bajas !== null) setVal('kpi-bajas', bajas);
-      if (edad !== null) setVal('kpi-edad', edad);
-      if (gen !== null) setVal('kpi-gen', gen);
-      if (genero !== null) setVal('kpi-genero', genero);
+      const antProm = getVal(6, 10);            // Celda K7
+      const antTend = getVal(7, 10);            // Celda K8
       if (antProm !== null) setVal('kpi-ant-prom', `${antProm} años`);
       if (antTend !== null) setVal('kpi-ant-tend', `${antTend} años`);
+    }
+
+    // 2. Procesa los datos provenientes de 'SoC'
+    function processSoCData(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
+
+      const getVal = (r, c) => {
+        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
+        const cell = rows[r].c[c];
+        return cell.f !== undefined ? cell.f : cell.v;
+      };
+
+      setVal('kpi-contrib', getVal(3, 1));      // Celda B4 (Contribuidor Individual)
+      setVal('kpi-lideres', getVal(4, 1));      // Celda B5 (Líder)
+      setVal('kpi-total-contrib', getVal(5, 1));// Celda B6 (Suma total)
+      setVal('kpi-span-actual', getVal(3, 4));  // Celda E4 (Soc Actual)
+      setVal('kpi-span-optimo', getVal(4, 4));  // Celda E5 (Soc Óptimo)
 
       const now = new Date();
       const updateEl = document.getElementById('last-update');
       if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
+    // Sincronización doble simultánea
     function syncLiveData() {
-      const script = document.createElement('script');
-      // Consulta directa al nombre de la pestaña Calc_Data sin depender de GIDs
-      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
-      document.body.appendChild(script);
-      script.onload = () => script.remove();
+      // Petición 1: Pestaña Calc_Data
+      const scriptCalc = document.createElement('script');
+      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&headers=0&tqx=responseHandler:processCalcData&t=${Date.now()}`;
+      document.body.appendChild(scriptCalc);
+      scriptCalc.onload = () => scriptCalc.remove();
+
+      // Petición 2: Pestaña SoC
+      const scriptSoC = document.createElement('script');
+      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&headers=0&tqx=responseHandler:processSoCData&t=${Date.now()}`;
+      document.body.appendChild(scriptSoC);
+      scriptSoC.onload = () => scriptSoC.remove();
     }
 
     window.onload = () => {
