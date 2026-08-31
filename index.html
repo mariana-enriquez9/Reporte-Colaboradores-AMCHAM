@@ -21,12 +21,19 @@
     .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
 
     .card-block { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; gap: 15px; }
-    .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+    .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .sub-title { font-size: 0.95rem; font-weight: 600; color: #475569; margin-bottom: 8px; }
 
-    /* Contenedor adaptativo de iframe de Google */
+    .last-update { font-size: 0.7rem; font-weight: 400; color: #94a3b8; }
+
+    /* Estilos Nativos de Tarjetas KPI */
+    .kpi-group { display: flex; gap: 10px; width: 100%; }
+    .kpi-card { flex: 1; background-color: #dce6f1; border: 1px solid #b8cce4; border-radius: 6px; text-align: center; padding: 10px 5px; }
+    .kpi-card.green { background-color: #e2efda; border-color: #c6e0b4; }
+    .kpi-label { display: block; font-size: 0.75rem; color: #333; margin-bottom: 4px; font-weight: 500; }
+    .kpi-value { display: block; font-size: 1.3rem; font-weight: bold; color: #1e293b; }
+
     iframe { width: 100%; border: none; border-radius: 6px; overflow: hidden; }
-    .iframe-kpi { height: 90px; }
     .iframe-chart { height: 300px; }
     .iframe-chart-pie { height: 280px; }
   </style>
@@ -48,8 +55,24 @@
 
       <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
-        <div class="block-title">Métricas de Headcount</div>
-        <iframe class="iframe-kpi" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubhtml?gid=622441979&single=true&range=B3:E6&widget=false&chrome=false"></iframe>
+        <div class="block-title">
+          <span>Métricas de Headcount</span>
+          <span class="last-update" id="last-update">Sincronizando...</span>
+        </div>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">HC Actual</span>
+            <span id="kpi-hc" class="kpi-value">70</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Altas (YTD)</span>
+            <span id="kpi-altas" class="kpi-value">8</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Bajas (YTD)</span>
+            <span id="kpi-bajas" class="kpi-value">10</span>
+          </div>
+        </div>
         <div class="sub-title">Evolución HC Mensual</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
       </div>
@@ -57,7 +80,16 @@
       <!-- 2. BLOQUE GENERACIÓN -->
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
-        <iframe class="iframe-kpi" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubhtml?gid=622441979&single=true&range=F3:I6&widget=false&chrome=false"></iframe>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Edad Promedio</span>
+            <span id="kpi-edad" class="kpi-value">38</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Generación Predominante</span>
+            <span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Millennials</span>
+          </div>
+        </div>
         <div class="sub-title">Distribución por Generación</div>
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=259479833&format=interactive"></iframe>
       </div>
@@ -69,7 +101,16 @@
       <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
-        <iframe class="iframe-kpi" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubhtml?gid=622441979&single=true&range=B24:D27&widget=false&chrome=false"></iframe>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Promedio de Antigüedad</span>
+            <span id="kpi-ant-prom" class="kpi-value">6 años</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Tendencia de Antigüedad</span>
+            <span id="kpi-ant-tend" class="kpi-value">1 años</span>
+          </div>
+        </div>
         <div class="sub-title">Distribución de Antigüedad</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
       </div>
@@ -77,7 +118,12 @@
       <!-- 4. BLOQUE GÉNERO -->
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
-        <iframe class="iframe-kpi" style="max-width: 260px;" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubhtml?gid=622441979&single=true&range=J3:L6&widget=false&chrome=false"></iframe>
+        <div class="kpi-group" style="max-width: 250px;">
+          <div class="kpi-card">
+            <span class="kpi-label">Género Predominante</span>
+            <span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Masculino</span>
+          </div>
+        </div>
         <div class="sub-title">Distribución por Género</div>
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=384621772&format=interactive"></iframe>
       </div>
@@ -91,7 +137,32 @@
 
     <div class="card-block">
       <div class="block-title">Span of Control</div>
-      <iframe class="iframe-kpi" style="height: 140px;" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubhtml?gid=622441979&single=true&range=N3:S11&widget=false&chrome=false"></iframe>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Span of Control Actual</span>
+            <span id="kpi-span-actual" class="kpi-value">2.33</span>
+          </div>
+          <div class="kpi-card green">
+            <span class="kpi-label">Span of Control Óptimo</span>
+            <span id="kpi-span-optimo" class="kpi-value">3</span>
+          </div>
+        </div>
+        <div class="kpi-group">
+          <div class="kpi-card">
+            <span class="kpi-label">Líderes</span>
+            <span id="kpi-lideres" class="kpi-value">21</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Contribuidores Individuales</span>
+            <span id="kpi-contrib" class="kpi-value">49</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Total Contribuidores</span>
+            <span id="kpi-total-contrib" class="kpi-value">70</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card-block">
@@ -105,6 +176,9 @@
   </main>
 
   <script>
+    const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
+    const GID_CALC = "1138241088"; // GID de la pestaña Calc_Data
+
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -112,6 +186,55 @@
       document.getElementById(`slide${slideNumber}`).classList.add('active');
       event.currentTarget.classList.add('active');
     }
+
+    function setVal(id, val) {
+      if (val !== undefined && val !== null && val !== '') {
+        const el = document.getElementById(id);
+        if (el) el.innerText = String(val).trim();
+      }
+    }
+
+    // Callback de respuesta JSONP de la API de Google
+    function processSheetResponse(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
+
+      const getVal = (r, c) => {
+        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
+        const cell = rows[r].c[c];
+        return cell.f !== undefined ? cell.f : cell.v;
+      };
+
+      // Extracción directa según coordenadas de Calc_Data:
+      setVal('kpi-hc', getVal(0, 6));           // Celda G1
+      setVal('kpi-altas', getVal(2, 6));        // Celda G3
+      setVal('kpi-bajas', getVal(3, 6));        // Celda G4
+      setVal('kpi-edad', getVal(5, 6));         // Celda G6
+      setVal('kpi-gen', getVal(6, 6));          // Celda G7
+      setVal('kpi-genero', getVal(4, 21));      // Celda V5
+
+      const antProm = getVal(6, 10);            // Celda K7
+      const antTend = getVal(7, 10);            // Celda K8
+      if (antProm !== null) setVal('kpi-ant-prom', `${antProm} años`);
+      if (antTend !== null) setVal('kpi-ant-tend', `${antTend} años`);
+
+      const now = new Date();
+      const updateEl = document.getElementById('last-update');
+      if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
+    }
+
+    function syncLiveData() {
+      const script = document.createElement('script');
+      // Petición JSONP segura que evade el bloqueo de CORS en GitHub Pages
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${GID_CALC}&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
+      document.body.appendChild(script);
+      script.onload = () => script.remove();
+    }
+
+    window.onload = () => {
+      syncLiveData();
+      setInterval(syncLiveData, 30000); // Consulta actualización cada 30 segundos
+    };
   </script>
 
 </body>
