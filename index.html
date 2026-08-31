@@ -10,7 +10,7 @@
 
     header { width: 100%; max-width: 1300px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #cbd5e1; }
     h1 { font-size: 1.5rem; color: #0f172a; }
-    
+
     .nav-tabs { display: flex; gap: 10px; }
     .tab-btn { background: #e2e8f0; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569; transition: all 0.2s ease; }
     .tab-btn.active { background: #2563eb; color: #ffffff; }
@@ -21,8 +21,10 @@
     .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
 
     .card-block { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; gap: 15px; }
-    .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+    .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .sub-title { font-size: 0.95rem; font-weight: 600; color: #475569; margin-bottom: 8px; }
+
+    .last-update { font-size: 0.7rem; font-weight: 400; color: #94a3b8; }
 
     /* Estilos Nativos para Tarjetas KPI */
     .kpi-group { display: flex; gap: 10px; width: 100%; }
@@ -30,6 +32,7 @@
     .kpi-card.green { background-color: #e2efda; border-color: #c6e0b4; }
     .kpi-label { display: block; font-size: 0.75rem; color: #333; margin-bottom: 4px; font-weight: 500; }
     .kpi-value { display: block; font-size: 1.3rem; font-weight: bold; color: #1e293b; }
+    .kpi-value.loading { color: #94a3b8; font-weight: 500; font-size: 1rem; }
 
     iframe { width: 100%; border: none; border-radius: 6px; overflow: hidden; }
     .iframe-chart { height: 300px; }
@@ -48,24 +51,27 @@
 
   <!-- ================= SLIDE 1 ================= -->
   <main id="slide1" class="slide active">
-    
+
     <div class="grid-layout">
-      
+
       <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
-        <div class="block-title">Métricas de Headcount</div>
+        <div class="block-title">
+          <span>Métricas de Headcount</span>
+          <span class="last-update" id="last-update">Cargando...</span>
+        </div>
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">HC Actual</span>
-            <span id="kpi-hc" class="kpi-value">73</span>
+            <span id="kpi-hc" class="kpi-value loading">…</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Altas (YTD)</span>
-            <span id="kpi-altas" class="kpi-value">13</span>
+            <span id="kpi-altas" class="kpi-value loading">…</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Bajas (YTD)</span>
-            <span id="kpi-bajas" class="kpi-value">12</span>
+            <span id="kpi-bajas" class="kpi-value loading">…</span>
           </div>
         </div>
         <div class="sub-title">Evolución HC Mensual</div>
@@ -78,11 +84,11 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Edad Promedio</span>
-            <span id="kpi-edad" class="kpi-value">38</span>
+            <span id="kpi-edad" class="kpi-value loading">…</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Generación Predominante</span>
-            <span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Millennials</span>
+            <span id="kpi-gen" class="kpi-value loading" style="font-size: 0.95rem; padding-top:4px;">…</span>
           </div>
         </div>
         <div class="sub-title">Distribución por Generación</div>
@@ -92,18 +98,18 @@
     </div>
 
     <div class="grid-layout">
-      
+
       <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Promedio de Antigüedad</span>
-            <span id="kpi-ant-prom" class="kpi-value">6 años</span>
+            <span id="kpi-ant-prom" class="kpi-value loading">…</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Tendencia de Antigüedad</span>
-            <span id="kpi-ant-tend" class="kpi-value">1 años</span>
+            <span id="kpi-ant-tend" class="kpi-value loading">…</span>
           </div>
         </div>
         <div class="sub-title">Distribución de Antigüedad</div>
@@ -116,7 +122,7 @@
         <div class="kpi-group" style="max-width: 250px;">
           <div class="kpi-card">
             <span class="kpi-label">Género Predominante</span>
-            <span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Masculino</span>
+            <span id="kpi-genero" class="kpi-value loading" style="font-size: 0.95rem; padding-top:4px;">…</span>
           </div>
         </div>
         <div class="sub-title">Distribución por Género</div>
@@ -129,32 +135,32 @@
 
   <!-- ================= SLIDE 2 ================= -->
   <main id="slide2" class="slide">
-    
+
     <div class="card-block">
       <div class="block-title">Span of Control</div>
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Span of Control Actual</span>
-            <span id="kpi-span-actual" class="kpi-value">2.33</span>
+            <span id="kpi-span-actual" class="kpi-value loading">…</span>
           </div>
           <div class="kpi-card green">
             <span class="kpi-label">Span of Control Óptimo</span>
-            <span id="kpi-span-optimo" class="kpi-value">3</span>
+            <span id="kpi-span-optimo" class="kpi-value loading">…</span>
           </div>
         </div>
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Líderes</span>
-            <span id="kpi-lideres" class="kpi-value">21</span>
+            <span id="kpi-lideres" class="kpi-value loading">…</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Contribuidores Individuales</span>
-            <span id="kpi-contrib" class="kpi-value">49</span>
+            <span id="kpi-contrib" class="kpi-value loading">…</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Total Contribuidores</span>
-            <span id="kpi-total-contrib" class="kpi-value">70</span>
+            <span id="kpi-total-contrib" class="kpi-value loading">…</span>
           </div>
         </div>
       </div>
@@ -171,74 +177,98 @@
   </main>
 
   <script>
+    // ==========================================================
+    // 1) REEMPLAZA ESTE VALOR con el ID REAL de tu hoja de cálculo
+    //    (lo encuentras en la URL cuando editas la hoja:
+    //     https://docs.google.com/spreadsheets/d/ESTE_ID/edit)
+    //    NO uses el ID que empieza con "2PACX-1v...", ese es solo
+    //    para las gráficas publicadas (pubchart), no funciona aquí.
+    // ==========================================================
+    const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
+
+    // Cada cuántos milisegundos se refresca (60000 = 60s)
+    const REFRESH_INTERVAL_MS = 60000;
+
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      
+
       document.getElementById(`slide${slideNumber}`).classList.add('active');
       event.currentTarget.classList.add('active');
     }
 
+    function setVal(id, value, suffix) {
+      if (value === null || value === undefined || value === '') return;
+      const el = document.getElementById(id);
+      el.classList.remove('loading');
+      el.innerText = suffix ? `${value}${suffix}` : value;
+    }
+
     // Procesa la respuesta de Google Sheets buscando coincidencias exactas
     function processSheetResponse(data) {
-      if (!data || !data.table || !data.table.rows) return;
+      if (!data || !data.table || !data.table.rows) {
+        console.error('Respuesta de Google Sheets inválida:', data);
+        return;
+      }
       const rows = data.table.rows;
 
-      // Función auxiliar para obtener el valor formateado o numérico de una celda por fila y columna
       const getVal = (r, c) => {
         if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
-        return rows[r].c[c].f !== undefined ? rows[r].c[c].f : rows[r].c[c].v;
+        const cell = rows[r].c[c];
+        return cell.f !== undefined ? cell.f : cell.v;
       };
 
-      // Recorremos la tabla buscando los valores exactos
-      // Headcount Fila 4 (Fila 5 en Excel): Celdas B5, C5, D5
-      const hc = getVal(4, 1);
-      const altas = getVal(4, 2);
-      const bajas = getVal(4, 3);
+      // Fila 5 (índice 4)
+      setVal('kpi-hc', getVal(4, 1));          // B5
+      setVal('kpi-altas', getVal(4, 2));       // C5
+      setVal('kpi-bajas', getVal(4, 3));       // D5
+      setVal('kpi-edad', getVal(4, 5));        // F5
+      setVal('kpi-gen', getVal(4, 7));         // H5
+      setVal('kpi-genero', getVal(4, 10));     // K5
+      setVal('kpi-span-actual', getVal(4, 15)); // P5
+      setVal('kpi-span-optimo', getVal(4, 17)); // R5
 
-      if (hc !== null && !isNaN(hc)) document.getElementById('kpi-hc').innerText = hc;
-      if (altas !== null && !isNaN(altas)) document.getElementById('kpi-altas').innerText = altas;
-      if (bajas !== null && !isNaN(bajas)) document.getElementById('kpi-bajas').innerText = bajas;
+      // Fila 10 (índice 9)
+      setVal('kpi-lideres', getVal(9, 14));       // O10
+      setVal('kpi-contrib', getVal(9, 16));       // Q10
+      setVal('kpi-total-contrib', getVal(9, 18)); // S10
 
-      // Composición Demográfica
-      const edad = getVal(4, 5);
-      const gen = getVal(4, 7);
-      const genero = getVal(4, 10);
+      // Fila 26 (índice 25)
+      const antProm = getVal(25, 1); // B26
+      const antTend = getVal(25, 2); // C26
+      setVal('kpi-ant-prom', antProm, typeof antProm === 'number' ? ' años' : '');
+      setVal('kpi-ant-tend', antTend, typeof antTend === 'number' ? ' años' : '');
 
-      if (edad !== null) document.getElementById('kpi-edad').innerText = edad;
-      if (gen !== null) document.getElementById('kpi-gen').innerText = gen;
-      if (genero !== null) document.getElementById('kpi-genero').innerText = genero;
-
-      // Antigüedad
-      const antProm = getVal(25, 1);
-      const antTend = getVal(25, 2);
-
-      if (antProm !== null) document.getElementById('kpi-ant-prom').innerText = antProm + (typeof antProm === 'number' ? ' años' : '');
-      if (antTend !== null) document.getElementById('kpi-ant-tend').innerText = antTend + (typeof antTend === 'number' ? ' años' : '');
-
-      // Span of Control
-      const spanActual = getVal(4, 15);
-      const spanOptimo = getVal(4, 17);
-      const lideres = getVal(9, 14);
-      const contrib = getVal(9, 16);
-      const totalContrib = getVal(9, 18);
-
-      if (spanActual !== null) document.getElementById('kpi-span-actual').innerText = spanActual;
-      if (spanOptimo !== null) document.getElementById('kpi-span-optimo').innerText = spanOptimo;
-      if (lideres !== null) document.getElementById('kpi-lideres').innerText = lideres;
-      if (contrib !== null) document.getElementById('kpi-contrib').innerText = contrib;
-      if (totalContrib !== null) document.getElementById('kpi-total-contrib').innerText = totalContrib;
+      const now = new Date();
+      const updateEl = document.getElementById('last-update');
+      if (updateEl) updateEl.innerText = `Actualizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
     // Carga de script JSONP a través de Google Visualization API
     function syncLiveData() {
-      const sheetId = '2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL';
+      if (SPREADSHEET_ID === 'SPREADSHEET_ID_REAL_AQUI') {
+        console.warn('⚠️ Falta configurar SPREADSHEET_ID con el ID real de tu hoja de cálculo.');
+        const updateEl = document.getElementById('last-update');
+        if (updateEl) updateEl.innerText = 'Falta configurar ID de hoja';
+        return;
+      }
+
       const script = document.createElement('script');
-      script.src = `https://docs.google.com/spreadsheets/d/e/${sheetId}/gviz/tq?tqx=responseHandler:processSheetResponse`;
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
+      script.onerror = () => {
+        console.error('No se pudo cargar la hoja. Verifica que esté compartida como "Cualquier persona con el enlace" y que el ID sea correcto.');
+        const updateEl = document.getElementById('last-update');
+        if (updateEl) updateEl.innerText = 'Error al sincronizar';
+      };
       document.body.appendChild(script);
+      // Limpieza para no acumular <script> tags en cada refresco
+      script.onload = () => script.remove();
     }
 
-    window.onload = syncLiveData;
+    window.onload = () => {
+      syncLiveData();
+      setInterval(syncLiveData, REFRESH_INTERVAL_MS);
+    };
   </script>
 
 </body>
