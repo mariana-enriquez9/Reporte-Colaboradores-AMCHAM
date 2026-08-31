@@ -48,9 +48,11 @@
     </div>
   </header>
 
+  <!-- ================= SLIDE 1 ================= -->
   <main id="slide1" class="slide active">
 
     <div class="grid-layout">
+      <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
@@ -65,6 +67,7 @@
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
       </div>
 
+      <!-- 2. BLOQUE GENERACIÓN -->
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
         <div class="kpi-group">
@@ -77,6 +80,7 @@
     </div>
 
     <div class="grid-layout">
+      <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
@@ -87,6 +91,7 @@
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
       </div>
 
+      <!-- 4. BLOQUE GÉNERO -->
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
         <div class="kpi-group" style="max-width: 250px;">
@@ -99,6 +104,7 @@
 
   </main>
 
+  <!-- ================= SLIDE 2 ================= -->
   <main id="slide2" class="slide">
     <div class="card-block">
       <div class="block-title">Span of Control</div>
@@ -141,24 +147,10 @@
       }
     }
 
-    // Quita acentos/diacríticos y normaliza espacios, para que "Género" === "Genero"
-    // sin importar cómo Google Sheets serialice los caracteres (NFC vs NFD),
-    // mayúsculas, o espacios extra.
-    function normalizeText(s) {
-      return String(s)
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // elimina marcas diacríticas (acentos)
-        .toLowerCase()
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    // Unifica encabezados (cols) y filas (rows) en una matriz 2D limpia
     function buildGrid(data) {
       if (!data || !data.table) return [];
       const grid = [];
 
-      // Fila 0 de la matriz: Encabezados de columna
       if (data.table.cols && data.table.cols.length > 0) {
         const colRow = data.table.cols.map(col => {
           if (!col) return null;
@@ -167,7 +159,6 @@
         grid.push(colRow);
       }
 
-      // Filas 1..N de la matriz: Filas de celdas
       if (data.table.rows && data.table.rows.length > 0) {
         data.table.rows.forEach(r => {
           if (!r || !r.c) {
@@ -185,24 +176,23 @@
       return grid;
     }
 
-    // Busca un texto de etiqueta en toda la matriz y devuelve el primer valor no nulo a su derecha.
-    // exactMatchOnly=true evita "falsos positivos" por coincidencias parciales
-    // (p. ej. que "Edad Promedio" enganche la búsqueda de "Promedio").
+    // Busca la etiqueta y SALTA celdas nulas/vacías a la derecha hasta encontrar el valor real
     function getValueNextTo(grid, labels, exactMatchOnly = false) {
-      const keywords = (Array.isArray(labels) ? labels : [labels]).map(normalizeText);
+      const keywords = (Array.isArray(labels) ? labels : [labels]).map(k => String(k).toLowerCase().trim());
 
       for (let r = 0; r < grid.length; r++) {
         if (!grid[r]) continue;
         for (let c = 0; c < grid[r].length; c++) {
           const cellVal = grid[r][c];
           if (cellVal === null || cellVal === undefined) continue;
-          const str = normalizeText(cellVal);
+          const str = String(cellVal).toLowerCase().trim();
 
           const matched = keywords.some(kw => {
             return exactMatchOnly ? str === kw : (str === kw || (kw.length > 4 && str.includes(kw)));
           });
 
           if (matched) {
+            // Escanea todas las celdas a la derecha saltando las vacías/nulas
             for (let nc = c + 1; nc < grid[r].length; nc++) {
               const val = grid[r][nc];
               if (val !== null && val !== undefined && String(val).trim() !== '') {
@@ -215,7 +205,6 @@
       return null;
     }
 
-    // Procesar la pestaña Calc_Data
     function processCalcData(data) {
       const grid = buildGrid(data);
       if (grid.length === 0) return;
@@ -223,12 +212,10 @@
       setVal('kpi-hc', getValueNextTo(grid, ['current hc', 'hc actual', 'hc']));
       setVal('kpi-altas', getValueNextTo(grid, ['total altas', 'altas']));
       setVal('kpi-bajas', getValueNextTo(grid, ['total bajas', 'bajas']));
-      setVal('kpi-edad', getValueNextTo(grid, ['edad promedio'], true));
+      setVal('kpi-edad', getValueNextTo(grid, ['edad promedio']));
 
-      // Coincidencia exacta: evita que "Promedio" o "Predominante" sueltos
-      // en otra sección de la hoja (p. ej. antigüedad) contaminen el resultado.
-      setVal('kpi-gen', getValueNextTo(grid, ['generacion predominante'], true));
-      setVal('kpi-genero', getValueNextTo(grid, ['genero predominante'], true));
+      setVal('kpi-gen', getValueNextTo(grid, ['generación predominante', 'generacion predominante']));
+      setVal('kpi-genero', getValueNextTo(grid, ['género predominante', 'genero predominante']));
 
       const antProm = getValueNextTo(grid, ['promedio'], true);
       const antTend = getValueNextTo(grid, ['tendencia'], true);
@@ -241,17 +228,16 @@
       if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
-    // Procesar la pestaña SoC
     function processSoCData(data) {
       const grid = buildGrid(data);
       if (grid.length === 0) return;
 
       setVal('kpi-contrib', getValueNextTo(grid, ['contribuidor individual', 'contribuidores individuales']));
-      setVal('kpi-lideres', getValueNextTo(grid, ['lider', 'lideres']));
+      setVal('kpi-lideres', getValueNextTo(grid, ['líder', 'lider', 'líderes']));
       setVal('kpi-total-contrib', getValueNextTo(grid, ['suma total', 'total contribuidores']));
 
       setVal('kpi-span-actual', getValueNextTo(grid, ['soc actual', 'span of control actual']));
-      setVal('kpi-span-optimo', getValueNextTo(grid, ['soc optimo', 'span of control optimo']));
+      setVal('kpi-span-optimo', getValueNextTo(grid, ['soc óptimo', 'soc optimo', 'span of control óptimo']));
     }
 
     function syncLiveData() {
