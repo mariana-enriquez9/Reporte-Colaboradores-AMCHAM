@@ -132,10 +132,6 @@
 
   <script>
     const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
-    
-    // GIDs de las pestañas
-    const GID_CALC_DATA = "1138241088";
-    const GID_SOC = "530067332"; 
 
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
@@ -151,85 +147,93 @@
       }
     }
 
-    // Busca un valor en la misma fila de una etiqueta
-    function findValueByLabel(rows, labelText) {
-        labelNeedle = labelText.toLowerCase().trim();
-        for (let r = 0; r < rows.length; r++) {
-            if (!rows[r] || !rows[r].c) continue;
-            for (let c = 0; c < rows[r].c.length; c++) {
-                const cell = rows[r].c[c];
-                if (!cell) continue;
-                
-                const text = String(cell.f !== undefined ? cell.f : (cell.v ?? '')).toLowerCase().trim();
-                
-                // Si encontramos la etiqueta
-                if (text === labelNeedle || text.includes(labelNeedle)) {
-                    // Buscar el siguiente valor no nulo en esa misma fila, empezando desde la celda de la etiqueta
-                    for (let nc = c + 1; nc < rows[r].c.length; nc++) {
-                        const target = rows[r].c[nc];
-                        if (target && target.v !== null && target.v !== undefined && target.v !== '') {
-                            return target.f !== undefined ? target.f : target.v;
-                        }
-                    }
-                }
+    // Obtiene el texto real de una celda evaluando .f (formato/fórmula) y .v (valor)
+    function getCellText(cell) {
+      if (!cell) return null;
+      if (cell.f !== undefined && cell.f !== null && String(cell.f).trim() !== '') return String(cell.f).trim();
+      if (cell.v !== undefined && cell.v !== null && String(cell.v).trim() !== '') return String(cell.v).trim();
+      return null;
+    }
+
+    // Busca un valor en la fila a la derecha de una etiqueta
+    function findValueByLabel(rows, keywords, exactMatch = false) {
+      const keys = Array.isArray(keywords) ? keywords : [keywords];
+
+      for (let r = 0; r < rows.length; r++) {
+        if (!rows[r] || !rows[r].c) continue;
+        for (let c = 0; c < rows[r].c.length; c++) {
+          const text = getCellText(rows[r].c[c]);
+          if (!text) continue;
+
+          const lowerText = text.toLowerCase();
+          const isMatch = keys.some(kw => {
+            const lowerKw = kw.toLowerCase();
+            return exactMatch ? lowerText === lowerKw : lowerText.includes(lowerKw);
+          });
+
+          if (isMatch) {
+            for (let nc = c + 1; nc < rows[r].c.length; nc++) {
+              const val = getCellText(rows[r].c[nc]);
+              if (val !== null) {
+                return val;
+              }
             }
+          }
         }
-        return null;
+      }
+      return null;
     }
 
-    // Procesar Calc_Data
     function processCalcData(data) {
-        if (!data || !data.table || !data.table.rows) return;
-        const rows = data.table.rows;
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
 
-        // Búsqueda robusta por etiqueta (ignora desplazamientos de filas/columnas vacías)
-        setVal('kpi-hc', findValueByLabel(rows, 'current hc') || findValueByLabel(rows, 'hc actual') || findValueByLabel(rows, 'hc'));
-        setVal('kpi-altas', findValueByLabel(rows, 'total altas') || findValueByLabel(rows, 'altas'));
-        setVal('kpi-bajas', findValueByLabel(rows, 'total bajas') || findValueByLabel(rows, 'bajas'));
-        setVal('kpi-edad', findValueByLabel(rows, 'edad promedio'));
-        
-        setVal('kpi-gen', findValueByLabel(rows, 'generación predominante') || findValueByLabel(rows, 'generacion predominante'));
-        setVal('kpi-genero', findValueByLabel(rows, 'género predominante') || findValueByLabel(rows, 'genero predominante'));
+      setVal('kpi-hc', findValueByLabel(rows, ['current hc', 'hc actual']));
+      setVal('kpi-altas', findValueByLabel(rows, ['total altas', 'altas']));
+      setVal('kpi-bajas', findValueByLabel(rows, ['total bajas', 'bajas']));
+      setVal('kpi-edad', findValueByLabel(rows, ['edad promedio']));
 
-        const antProm = findValueByLabel(rows, 'promedio');
-        const antTend = findValueByLabel(rows, 'tendencia');
-        
-        if (antProm !== null) setVal('kpi-ant-prom', antProm, ' años');
-        if (antTend !== null) setVal('kpi-ant-tend', antTend, ' años');
+      setVal('kpi-gen', findValueByLabel(rows, ['generación', 'generacion']));
+      setVal('kpi-genero', findValueByLabel(rows, ['género', 'genero']));
 
-        const now = new Date();
-        const updateEl = document.getElementById('last-update');
-        if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
+      const antProm = findValueByLabel(rows, ['promedio'], true);
+      const antTend = findValueByLabel(rows, ['tendencia'], true);
+
+      if (antProm !== null) setVal('kpi-ant-prom', antProm, ' años');
+      if (antTend !== null) setVal('kpi-ant-tend', antTend, ' años');
+
+      const now = new Date();
+      const updateEl = document.getElementById('last-update');
+      if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
-    // Procesar SoC
     function processSoCData(data) {
-        if (!data || !data.table || !data.table.rows) return;
-        const rows = data.table.rows;
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
 
-        setVal('kpi-contrib', findValueByLabel(rows, 'contribuidor individual'));
-        setVal('kpi-lideres', findValueByLabel(rows, 'líder') || findValueByLabel(rows, 'lider'));
-        setVal('kpi-total-contrib', findValueByLabel(rows, 'suma total'));
-        
-        setVal('kpi-span-actual', findValueByLabel(rows, 'soc actual'));
-        setVal('kpi-span-optimo', findValueByLabel(rows, 'soc óptimo') || findValueByLabel(rows, 'soc optimo'));
+      setVal('kpi-contrib', findValueByLabel(rows, ['contribuidor individual']));
+      setVal('kpi-lideres', findValueByLabel(rows, ['líder', 'lider']));
+      setVal('kpi-total-contrib', findValueByLabel(rows, ['suma total']));
+
+      setVal('kpi-span-actual', findValueByLabel(rows, ['soc actual']));
+      setVal('kpi-span-optimo', findValueByLabel(rows, ['soc óptimo', 'soc optimo']));
     }
 
     function syncLiveData() {
-        const scriptCalc = document.createElement('script');
-        scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&tqx=responseHandler:processCalcData&t=${Date.now()}`;
-        document.body.appendChild(scriptCalc);
-        scriptCalc.onload = () => scriptCalc.remove();
+      const scriptCalc = document.createElement('script');
+      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&tqx=responseHandler:processCalcData&t=${Date.now()}`;
+      document.body.appendChild(scriptCalc);
+      scriptCalc.onload = () => scriptCalc.remove();
 
-        const scriptSoC = document.createElement('script');
-        scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&tqx=responseHandler:processSoCData&t=${Date.now()}`;
-        document.body.appendChild(scriptSoC);
-        scriptSoC.onload = () => scriptSoC.remove();
+      const scriptSoC = document.createElement('script');
+      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&tqx=responseHandler:processSoCData&t=${Date.now()}`;
+      document.body.appendChild(scriptSoC);
+      scriptSoC.onload = () => scriptSoC.remove();
     }
 
     window.onload = () => {
       syncLiveData();
-      setInterval(syncLiveData, 15000); 
+      setInterval(syncLiveData, 15000);
     };
   </script>
 
