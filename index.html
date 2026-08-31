@@ -52,7 +52,6 @@
   <main id="slide1" class="slide active">
 
     <div class="grid-layout">
-
       <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
         <div class="block-title">
@@ -60,18 +59,9 @@
           <span class="last-update" id="last-update">Sincronizando...</span>
         </div>
         <div class="kpi-group">
-          <div class="kpi-card">
-            <span class="kpi-label">HC Actual</span>
-            <span id="kpi-hc" class="kpi-value">...</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">Altas (YTD)</span>
-            <span id="kpi-altas" class="kpi-value">...</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">Bajas (YTD)</span>
-            <span id="kpi-bajas" class="kpi-value">...</span>
-          </div>
+          <div class="kpi-card"><span class="kpi-label">HC Actual</span><span id="kpi-hc" class="kpi-value">...</span></div>
+          <div class="kpi-card"><span class="kpi-label">Altas (YTD)</span><span id="kpi-altas" class="kpi-value">...</span></div>
+          <div class="kpi-card"><span class="kpi-label">Bajas (YTD)</span><span id="kpi-bajas" class="kpi-value">...</span></div>
         </div>
         <div class="sub-title">Evolución HC Mensual</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
@@ -81,35 +71,21 @@
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
         <div class="kpi-group">
-          <div class="kpi-card">
-            <span class="kpi-label">Edad Promedio</span>
-            <span id="kpi-edad" class="kpi-value">...</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">Generación Predominante</span>
-            <span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span>
-          </div>
+          <div class="kpi-card"><span class="kpi-label">Edad Promedio</span><span id="kpi-edad" class="kpi-value">...</span></div>
+          <div class="kpi-card"><span class="kpi-label">Generación Predominante</span><span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span></div>
         </div>
         <div class="sub-title">Distribución por Generación</div>
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=259479833&format=interactive"></iframe>
       </div>
-
     </div>
 
     <div class="grid-layout">
-
       <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
-          <div class="kpi-card">
-            <span class="kpi-label">Promedio de Antigüedad</span>
-            <span id="kpi-ant-prom" class="kpi-value">...</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">Tendencia de Antigüedad</span>
-            <span id="kpi-ant-tend" class="kpi-value">...</span>
-          </div>
+          <div class="kpi-card"><span class="kpi-label">Promedio de Antigüedad</span><span id="kpi-ant-prom" class="kpi-value">...</span></div>
+          <div class="kpi-card"><span class="kpi-label">Tendencia de Antigüedad</span><span id="kpi-ant-tend" class="kpi-value">...</span></div>
         </div>
         <div class="sub-title">Distribución de Antigüedad</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
@@ -119,48 +95,28 @@
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
         <div class="kpi-group" style="max-width: 250px;">
-          <div class="kpi-card">
-            <span class="kpi-label">Género Predominante</span>
-            <span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span>
-          </div>
+          <div class="kpi-card"><span class="kpi-label">Género Predominante</span><span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span></div>
         </div>
         <div class="sub-title">Distribución por Género</div>
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=384621772&format=interactive"></iframe>
       </div>
-
     </div>
 
   </main>
 
   <!-- ================= SLIDE 2 ================= -->
   <main id="slide2" class="slide">
-
     <div class="card-block">
       <div class="block-title">Span of Control</div>
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <div class="kpi-group">
-          <div class="kpi-card">
-            <span class="kpi-label">Span of Control Actual</span>
-            <span id="kpi-span-actual" class="kpi-value">...</span>
-          </div>
-          <div class="kpi-card green">
-            <span class="kpi-label">Span of Control Óptimo</span>
-            <span id="kpi-span-optimo" class="kpi-value">...</span>
-          </div>
+          <div class="kpi-card"><span class="kpi-label">Span of Control Actual</span><span id="kpi-span-actual" class="kpi-value">...</span></div>
+          <div class="kpi-card green"><span class="kpi-label">Span of Control Óptimo</span><span id="kpi-span-optimo" class="kpi-value">...</span></div>
         </div>
         <div class="kpi-group">
-          <div class="kpi-card">
-            <span class="kpi-label">Líderes</span>
-            <span id="kpi-lideres" class="kpi-value">...</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">Contribuidores Individuales</span>
-            <span id="kpi-contrib" class="kpi-value">...</span>
-          </div>
-          <div class="kpi-card">
-            <span class="kpi-label">Total Contribuidores</span>
-            <span id="kpi-total-contrib" class="kpi-value">...</span>
-          </div>
+          <div class="kpi-card"><span class="kpi-label">Líderes</span><span id="kpi-lideres" class="kpi-value">...</span></div>
+          <div class="kpi-card"><span class="kpi-label">Contribuidores Individuales</span><span id="kpi-contrib" class="kpi-value">...</span></div>
+          <div class="kpi-card"><span class="kpi-label">Total Contribuidores</span><span id="kpi-total-contrib" class="kpi-value">...</span></div>
         </div>
       </div>
     </div>
@@ -172,94 +128,75 @@
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1232059089&format=interactive"></iframe>
       </div>
     </div>
-
   </main>
 
   <script>
     const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
-    
-    // GIDs de las pestañas
-    const GID_CALC_DATA = "1138241088";
-    const GID_SOC = "530067332"; // Asumimos un GID temporal o lo busca por nombre 'SoC'
 
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
       document.getElementById(`slide${slideNumber}`).classList.add('active');
       event.currentTarget.classList.add('active');
     }
 
-    function setVal(id, val) {
+    function setVal(id, val, suffix = '') {
       if (val !== undefined && val !== null && val !== '') {
         const el = document.getElementById(id);
-        if (el) el.innerText = String(val).trim();
+        if (el) el.innerText = String(val).trim() + suffix;
       }
     }
 
-    // 1. Procesa los datos de Calc_Data usando coordenadas exactas (Fila = num-1, Col = letra)
+    function getVal(rows, r, c) {
+      if (!rows || !rows[r] || !rows[r].c || !rows[r].c[c]) return null;
+      const cell = rows[r].c[c];
+      return cell.f !== undefined ? cell.f : cell.v;
+    }
+
+    // 1. Procesa `Calc_Data` con tus índices EXACTOS
     function processCalcData(data) {
       if (!data || !data.table || !data.table.rows) return;
       const rows = data.table.rows;
 
-      const getVal = (r, c) => {
-        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
-        const cell = rows[r].c[c];
-        return cell.f !== undefined ? cell.f : cell.v;
-      };
+      setVal('kpi-hc', getVal(rows, 0, 6));        // G1 (HC Actual)
+      setVal('kpi-altas', getVal(rows, 2, 6));     // G3 (Altas YTD)
+      setVal('kpi-bajas', getVal(rows, 3, 6));     // G4 (Bajas YTD)
+      setVal('kpi-edad', getVal(rows, 5, 6));      // G6 (Edad Promedio)
 
-      // Fila 1 = índice 0 | Columna G = índice 6
-      setVal('kpi-hc', getVal(0, 6));           // G1 (HC Actual)
-      setVal('kpi-altas', getVal(2, 6));        // G3 (Total Altas)
-      setVal('kpi-bajas', getVal(3, 6));        // G4 (Total Bajas)
-      setVal('kpi-edad', getVal(5, 6));         // G6 (Edad Promedio)
-      setVal('kpi-gen', getVal(6, 6));          // G7 (Generación Predominante)
-      
-      // Fila 4 = índice 3 | Columna V = índice 21
-      setVal('kpi-genero', getVal(3, 21));      // V4 (Género Predominante)
+      setVal('kpi-gen', getVal(rows, 6, 6));       // G7 (Generación Predominante) 
+      setVal('kpi-ant-prom', getVal(rows, 6, 9), ' años'); // J7 (Promedio de Antigüedad)
+      setVal('kpi-ant-tend', getVal(rows, 7, 9), ' años'); // J8 (Tendencia de Antigüedad)
 
-      // Columna K = índice 10
-      const antProm = getVal(6, 10);            // K7 (Promedio de Antigüedad)
-      const antTend = getVal(7, 10);            // K8 (Tendencia)
-      
-      if (antProm !== null) setVal('kpi-ant-prom', `${antProm} años`);
-      if (antTend !== null) setVal('kpi-ant-tend', `${antTend} años`);
+      setVal('kpi-genero', getVal(rows, 3, 21));   // V4 (Género Predominante)
 
       const now = new Date();
       const updateEl = document.getElementById('last-update');
       if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
-    // 2. Procesa los datos de SoC usando coordenadas exactas
+    // 2. Procesa `SoC` con índices EXACTOS
     function processSoCData(data) {
       if (!data || !data.table || !data.table.rows) return;
       const rows = data.table.rows;
 
-      const getVal = (r, c) => {
-        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
-        const cell = rows[r].c[c];
-        return cell.f !== undefined ? cell.f : cell.v;
-      };
+      // SoC: B4 (Fila 3, Col 1), E4 (Fila 3, Col 4)
+      setVal('kpi-contrib', getVal(rows, 3, 1));      
+      setVal('kpi-span-actual', getVal(rows, 3, 4));  
 
-      // Fila 4 = índice 3 | Columna B = índice 1 | Columna E = índice 4
-      setVal('kpi-contrib', getVal(3, 1));      // B4 (Contribuidor Individual)
-      setVal('kpi-span-actual', getVal(3, 4));  // E4 (Soc Actual)
+      // SoC: B5 (Fila 4, Col 1), E5 (Fila 4, Col 4)
+      setVal('kpi-lideres', getVal(rows, 4, 1));      
+      setVal('kpi-span-optimo', getVal(rows, 4, 4));  
 
-      setVal('kpi-lideres', getVal(4, 1));      // B5 (Líder)
-      setVal('kpi-span-optimo', getVal(4, 4));  // E5 (Soc Óptimo)
-
-      setVal('kpi-total-contrib', getVal(5, 1));// B6 (Suma total)
+      // SoC: B6 (Fila 5, Col 1)
+      setVal('kpi-total-contrib', getVal(rows, 5, 1));
     }
 
-    // Sincronización doble simultánea
     function syncLiveData() {
-      // Petición 1: Pestaña Calc_Data
       const scriptCalc = document.createElement('script');
       scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&headers=0&tqx=responseHandler:processCalcData&t=${Date.now()}`;
       document.body.appendChild(scriptCalc);
       scriptCalc.onload = () => scriptCalc.remove();
 
-      // Petición 2: Pestaña SoC (Se busca por nombre de pestaña)
       const scriptSoC = document.createElement('script');
       scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&headers=0&tqx=responseHandler:processSoCData&t=${Date.now()}`;
       document.body.appendChild(scriptSoC);
@@ -268,7 +205,7 @@
 
     window.onload = () => {
       syncLiveData();
-      setInterval(syncLiveData, 15000);
+      setInterval(syncLiveData, 15000); // 15 segundos para actualización rápida
     };
   </script>
 
