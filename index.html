@@ -56,7 +56,7 @@
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Cargando datos...</span>
+          <span class="last-update" id="last-update">Sincronizando...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card"><span class="kpi-label">HC Actual</span><span id="kpi-hc" class="kpi-value">...</span></div>
@@ -147,76 +147,70 @@
       }
     }
 
-    async function syncDataCSV() {
-      try {
-        // --- PROCESAR CALC_DATA ---
-        // Exportamos el CSV y dividimos por líneas
-        const resCalc = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&sheet=Calc_Data&cacheBust=${Date.now()}`);
-        const textCalc = await resCalc.text();
-        
-        // Parseamos el CSV 
-        const rowsCalc = textCalc.split('\n').map(row => {
-          // Separa por comas respetando el texto que está entre comillas (ej. números formateados)
-          const regex = /(".*?"|[^",\s]+)(?=\s*,|\s*$)/g;
-          let match;
-          let columns = [];
-          // Extraemos los valores crudos separados por comas
-          let rawCols = row.split(',');
-          return rawCols.map(c => c.replace(/^"|"$/g, '').trim());
-        });
+    function getVal(rows, r, c) {
+      if (!rows || !rows[r] || !rows[r].c || !rows[r].c[c]) return null;
+      const cell = rows[r].c[c];
+      return cell.f !== undefined ? cell.f : cell.v;
+    }
 
-        // Aplicamos el mapeo EXACTO usando los índices que se extraen directamente del CSV (0-indexed)
-        // G1 = Fila 0, Col 6
-        if(rowsCalc[0]) setVal('kpi-hc', rowsCalc[0][6]);
-        // G3 = Fila 2, Col 6
-        if(rowsCalc[2]) setVal('kpi-altas', rowsCalc[2][6]);
-        // G4 = Fila 3, Col 6
-        if(rowsCalc[3]) setVal('kpi-bajas', rowsCalc[3][6]);
-        // G6 = Fila 5, Col 6
-        if(rowsCalc[5]) setVal('kpi-edad', rowsCalc[5][6]);
-        
-        // G7 = Fila 6, Col 6 (Generación predominante)
-        if(rowsCalc[6] && rowsCalc[6][6]) setVal('kpi-gen', rowsCalc[6][6]);
-        // V4 = Fila 3, Col 21 (Género predominante)
-        if(rowsCalc[3] && rowsCalc[3][21]) setVal('kpi-genero', rowsCalc[3][21]);
+    // 1. Procesar Calc_Data por índices fijos de celdas
+    function processCalcData(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
 
-        // J7 y J8 (Antigüedad) - Fila 6 y 7, Col 9
-        if(rowsCalc[6] && rowsCalc[6][9]) setVal('kpi-ant-prom', rowsCalc[6][9], ' años');
-        if(rowsCalc[7] && rowsCalc[7][9]) setVal('kpi-ant-tend', rowsCalc[7][9], ' años');
+      // Filas y columnas basadas en 0-index:
+      setVal('kpi-hc', getVal(rows, 0, 6));          // G1 (Current HC)
+      setVal('kpi-altas', getVal(rows, 2, 6));       // G3 (Total Altas)
+      setVal('kpi-bajas', getVal(rows, 3, 6));       // G4 (Total Bajas)
+      setVal('kpi-edad', getVal(rows, 5, 6));        // G6 (Edad Promedio)
 
+      // G7 = Fila 6 (7 - 1), Columna G (Col 6)
+      setVal('kpi-gen', getVal(rows, 6, 6));         // G7 (Millennials)
 
-        // --- PROCESAR SOC ---
-        const resSoC = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&sheet=SoC&cacheBust=${Date.now()}`);
-        const textSoC = await resSoC.text();
-        const rowsSoC = textSoC.split('\n').map(row => row.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+      // V4 = Fila 3 (4 - 1), Columna V (Col 21)
+      setVal('kpi-genero', getVal(rows, 3, 21));     // V4 (Masculino)
 
-        // SoC: B4 (Fila 3, Col 1), E4 (Fila 3, Col 4)
-        if(rowsSoC[3]) {
-          setVal('kpi-contrib', rowsSoC[3][1]);
-          setVal('kpi-span-actual', rowsSoC[3][4]);
-        }
-        // SoC: B5 (Fila 4, Col 1), E5 (Fila 4, Col 4)
-        if(rowsSoC[4]) {
-          setVal('kpi-lideres', rowsSoC[4][1]);
-          setVal('kpi-span-optimo', rowsSoC[4][4]);
-        }
-        // SoC: B6 (Fila 5, Col 1)
-        if(rowsSoC[5]) {
-          setVal('kpi-total-contrib', rowsSoC[5][1]);
-        }
+      // J7 y J8 = Columna J (Col 9)
+      const antProm = getVal(rows, 6, 9);            // J7
+      const antTend = getVal(rows, 7, 9);            // J8
 
-        const now = new Date();
-        const updateEl = document.getElementById('last-update');
-        if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
+      if (antProm !== null) setVal('kpi-ant-prom', antProm, ' años');
+      if (antTend !== null) setVal('kpi-ant-tend', antTend, ' años');
 
-      } catch (error) {
-        console.error('Error al sincronizar CSV:', error);
-      }
+      const now = new Date();
+      const updateEl = document.getElementById('last-update');
+      if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
+    }
+
+    // 2. Procesar SoC por índices fijos de celdas
+    function processSoCData(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
+
+      setVal('kpi-contrib', getVal(rows, 3, 1));       // B4 (Contribuidor Individual)
+      setVal('kpi-lideres', getVal(rows, 4, 1));       // B5 (Líder)
+      setVal('kpi-total-contrib', getVal(rows, 5, 1)); // B6 (Suma Total)
+
+      setVal('kpi-span-actual', getVal(rows, 3, 4));   // E4 (Soc Actual)
+      setVal('kpi-span-optimo', getVal(rows, 4, 4));   // E5 (Soc Óptimo)
+    }
+
+    function syncLiveData() {
+      // Usamos el endpoint oficial JSONP gviz/tq con headers=0 para que tome la Fila 1 como datos
+      const scriptCalc = document.createElement('script');
+      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&headers=0&tqx=responseHandler:processCalcData&t=${Date.now()}`;
+      document.body.appendChild(scriptCalc);
+      scriptCalc.onload = () => scriptCalc.remove();
+
+      const scriptSoC = document.createElement('script');
+      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&headers=0&tqx=responseHandler:processSoCData&t=${Date.now()}`;
+      document.body.appendChild(scriptSoC);
+      scriptSoC.onload = () => scriptSoC.remove();
     }
 
     window.onload = () => {
-      syncDataCSV();
-      setInterval(syncDataCSV, 15000);
+      syncLiveData();
+      setInterval(syncLiveData, 15000);
     };
   </script>
 
