@@ -57,7 +57,7 @@
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
-          <span class="last-update" id="last-update">Sincronizando...</span>
+          <span class="last-update" id="last-update">Conectando...</span>
         </div>
         <div class="kpi-group">
           <div class="kpi-card">
@@ -177,7 +177,7 @@
 
   <script>
     const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
-    const GID_CALC = "1138241088";
+    const SHEET_NAME = "Calc_Data";
 
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
@@ -195,25 +195,48 @@
     }
 
     function processSheetResponse(data) {
-      if (!data || !data.table || !data.table.rows) return;
-      const rows = data.table.rows;
+      if (!data || !data.table) return;
+      const rows = data.table.rows || [];
 
-      const getVal = (r, c) => {
-        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
-        const cell = rows[r].c[c];
-        return cell.f !== undefined ? cell.f : cell.v;
-      };
+      // Función de rastreo dinámico que encuentra cualquier celda por el texto de su etiqueta
+      function findValueRightOf(labelNeedle) {
+        labelNeedle = labelNeedle.toLowerCase();
+        for (let r = 0; r < rows.length; r++) {
+          if (!rows[r] || !rows[r].c) continue;
+          for (let c = 0; c < rows[r].c.length; c++) {
+            const cell = rows[r].c[c];
+            if (!cell) continue;
+            const text = String(cell.f !== undefined ? cell.f : (cell.v ?? '')).toLowerCase();
+            if (text.includes(labelNeedle)) {
+              // Busca la primera celda con valor hacia la derecha
+              for (let nc = c + 1; nc < rows[r].c.length; nc++) {
+                const target = rows[r].c[nc];
+                if (target && target.v !== null && target.v !== undefined && target.v !== '') {
+                  return target.f !== undefined ? target.f : target.v;
+                }
+              }
+            }
+          }
+        }
+        return null;
+      }
 
-      // Mapeo exacto habilitado por headers=0:
-      setVal('kpi-hc', getVal(0, 6));           // Celda G1 (HC Actual)
-      setVal('kpi-altas', getVal(2, 6));        // Celda G3 (Altas YTD)
-      setVal('kpi-bajas', getVal(3, 6));        // Celda G4 (Bajas YTD)
-      setVal('kpi-edad', getVal(5, 6));         // Celda G6 (Edad Promedio)
-      setVal('kpi-gen', getVal(6, 6));          // Celda G7 (Generación)
-      setVal('kpi-genero', getVal(4, 21));      // Celda V5 (Género)
+      // Asignación dinámica basada en las etiquetas reales de Calc_Data
+      const hc = findValueRightOf('current hc') || findValueRightOf('hc actual');
+      const altas = findValueRightOf('total altas') || findValueRightOf('altas');
+      const bajas = findValueRightOf('total bajas') || findValueRightOf('bajas');
+      const edad = findValueRightOf('edad promedio');
+      const gen = findValueRightOf('generación predominante') || findValueRightOf('generacion predominante');
+      const genero = findValueRightOf('género predominante') || findValueRightOf('genero predominante');
+      const antProm = findValueRightOf('promedio');
+      const antTend = findValueRightOf('tendencia');
 
-      const antProm = getVal(6, 10);            // Celda K7 (Promedio Antigüedad)
-      const antTend = getVal(7, 10);            // Celda K8 (Tendencia Antigüedad)
+      if (hc !== null) setVal('kpi-hc', hc);
+      if (altas !== null) setVal('kpi-altas', altas);
+      if (bajas !== null) setVal('kpi-bajas', bajas);
+      if (edad !== null) setVal('kpi-edad', edad);
+      if (gen !== null) setVal('kpi-gen', gen);
+      if (genero !== null) setVal('kpi-genero', genero);
       if (antProm !== null) setVal('kpi-ant-prom', `${antProm} años`);
       if (antTend !== null) setVal('kpi-ant-tend', `${antTend} años`);
 
@@ -224,8 +247,8 @@
 
     function syncLiveData() {
       const script = document.createElement('script');
-      // Forzamos a no consumir la Fila 1 como encabezados usando headers=0
-      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${GID_CALC}&headers=0&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
+      // Consulta directa al nombre de la pestaña Calc_Data sin depender de GIDs
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
       document.body.appendChild(script);
       script.onload = () => script.remove();
     }
