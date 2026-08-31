@@ -50,9 +50,7 @@
 
   <!-- ================= SLIDE 1 ================= -->
   <main id="slide1" class="slide active">
-
     <div class="grid-layout">
-      <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
@@ -66,8 +64,6 @@
         <div class="sub-title">Evolución HC Mensual</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
       </div>
-
-      <!-- 2. BLOQUE GENERACIÓN -->
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
         <div class="kpi-group">
@@ -78,9 +74,7 @@
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=259479833&format=interactive"></iframe>
       </div>
     </div>
-
     <div class="grid-layout">
-      <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
@@ -90,8 +84,6 @@
         <div class="sub-title">Distribución de Antigüedad</div>
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
       </div>
-
-      <!-- 4. BLOQUE GÉNERO -->
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
         <div class="kpi-group" style="max-width: 250px;">
@@ -101,7 +93,6 @@
         <iframe class="iframe-chart-pie" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=384621772&format=interactive"></iframe>
       </div>
     </div>
-
   </main>
 
   <!-- ================= SLIDE 2 ================= -->
@@ -120,7 +111,6 @@
         </div>
       </div>
     </div>
-
     <div class="card-block">
       <div class="block-title">Tasa de Rotación y Análisis de Bajas</div>
       <div class="grid-layout">
@@ -186,35 +176,36 @@
     };
 
     // ==========================================
-    // 3. EXTRAE DATOS DE SOC
+    // 3. EXTRAE DATOS DE SOC (FILAS RECORRIDAS)
     // ==========================================
     window.processSoC = function(data) {
       if (!data || !data.table || !data.table.rows) return;
       const rows = data.table.rows;
       
-      setVal('kpi-contrib', getV(rows, 3, 1)); // B4
-      setVal('kpi-lideres', getV(rows, 4, 1)); // B5
-      setVal('kpi-total-contrib', getV(rows, 5, 1)); // B6
+      // La Fila 1 y 2 están vacías, por lo tanto Google empieza a contar en la Fila 3 (Empleado) que asume como cabecera (col=0).
+      // Nuestra fila 4 de la hoja ("Contribuidor Individual") ahora es la fila índice 0.
+      
+      setVal('kpi-contrib', getV(rows, 0, 1)); // 49
+      setVal('kpi-lideres', getV(rows, 1, 1)); // 21
+      setVal('kpi-total-contrib', getV(rows, 2, 1)); // 70
 
-      setVal('kpi-span-actual', getV(rows, 3, 4)); // E4
-      setVal('kpi-span-optimo', getV(rows, 4, 4)); // E5
+      setVal('kpi-span-actual', getV(rows, 0, 4)); // 2.33
+      setVal('kpi-span-optimo', getV(rows, 1, 4)); // 3
     };
 
     // MOTOR DE EXTRACCIÓN (100% Seguro para GitHub Pages)
     function loadGViz(sheet, range, callbackName) {
       const script = document.createElement('script');
-      // Forzamos a Google a leer con exactitud el rango pedido
       script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet}&range=${range}&headers=0&tqx=responseHandler:${callbackName}&t=${Date.now()}`;
       document.body.appendChild(script);
       script.onload = () => script.remove();
     }
 
     function syncLiveData() {
-      // Pedimos los datos en 4 peticiones pequeñas para aislar los textos y evitar que Google los borre
       loadGViz('Calc_Data', 'A1:K10', 'processCalcMain');  // Lee puros números
       loadGViz('Calc_Data', 'G7:G7', 'processCalcGen');    // Aísla el texto Millennials
       loadGViz('Calc_Data', 'V4:V4', 'processCalcGenero'); // Aísla el texto Masculino
-      loadGViz('SoC', 'A1:E10', 'processSoC');             // Lee la pestaña SoC
+      loadGViz('SoC', 'A4:E6', 'processSoC');              // Lee SÓLO el recuadro con datos exactos en SoC
     }
 
     window.onload = () => {
