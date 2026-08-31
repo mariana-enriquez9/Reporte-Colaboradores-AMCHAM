@@ -48,11 +48,9 @@
     </div>
   </header>
 
-  <!-- ================= SLIDE 1 ================= -->
   <main id="slide1" class="slide active">
 
     <div class="grid-layout">
-      <!-- 1. BLOQUE HEADCOUNT -->
       <div class="card-block">
         <div class="block-title">
           <span>Métricas de Headcount</span>
@@ -67,7 +65,6 @@
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=1663530331&format=interactive"></iframe>
       </div>
 
-      <!-- 2. BLOQUE GENERACIÓN -->
       <div class="card-block">
         <div class="block-title">Composición HC - Generación</div>
         <div class="kpi-group">
@@ -80,7 +77,6 @@
     </div>
 
     <div class="grid-layout">
-      <!-- 3. BLOQUE ANTIGÜEDAD -->
       <div class="card-block">
         <div class="block-title">Antigüedad</div>
         <div class="kpi-group">
@@ -91,7 +87,6 @@
         <iframe class="iframe-chart" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL/pubchart?oid=467007711&format=interactive"></iframe>
       </div>
 
-      <!-- 4. BLOQUE GÉNERO -->
       <div class="card-block">
         <div class="block-title">Composición HC - Género</div>
         <div class="kpi-group" style="max-width: 250px;">
@@ -104,7 +99,6 @@
 
   </main>
 
-  <!-- ================= SLIDE 2 ================= -->
   <main id="slide2" class="slide">
     <div class="card-block">
       <div class="block-title">Span of Control</div>
@@ -147,32 +141,81 @@
       }
     }
 
-    function getVal(rows, r, c) {
-      if (!rows || !rows[r] || !rows[r].c || !rows[r].c[c]) return null;
-      const cell = rows[r].c[c];
-      return cell.f !== undefined ? cell.f : cell.v;
+    // Unifica encabezados (cols) y filas (rows) en una matriz 2D limpia
+    function buildGrid(data) {
+      if (!data || !data.table) return [];
+      const grid = [];
+
+      // Fila 0 de la matriz: Encabezados de columna
+      if (data.table.cols && data.table.cols.length > 0) {
+        const colRow = data.table.cols.map(col => {
+          if (!col) return null;
+          return col.label !== undefined && col.label !== null ? col.label : col.id;
+        });
+        grid.push(colRow);
+      }
+
+      // Filas 1..N de la matriz: Filas de celdas
+      if (data.table.rows && data.table.rows.length > 0) {
+        data.table.rows.forEach(r => {
+          if (!r || !r.c) {
+            grid.push([]);
+            return;
+          }
+          const row = r.c.map(cell => {
+            if (!cell) return null;
+            return cell.f !== undefined && cell.f !== null && String(cell.f).trim() !== '' ? cell.f : cell.v;
+          });
+          grid.push(row);
+        });
+      }
+
+      return grid;
     }
 
-    // 1. Procesar Calc_Data por índices fijos de celdas
+    // Busca un texto de etiqueta en toda la matriz y devuelve el primer valor no nulo a su derecha
+    function getValueNextTo(grid, labels, exactMatchOnly = false) {
+      const keywords = (Array.isArray(labels) ? labels : [labels]).map(k => String(k).toLowerCase().trim());
+
+      for (let r = 0; r < grid.length; r++) {
+        if (!grid[r]) continue;
+        for (let c = 0; c < grid[r].length; c++) {
+          const cellVal = grid[r][c];
+          if (cellVal === null || cellVal === undefined) continue;
+          const str = String(cellVal).toLowerCase().trim();
+
+          const matched = keywords.some(kw => {
+            return exactMatchOnly ? str === kw : (str === kw || (kw.length > 4 && str.includes(kw)));
+          });
+
+          if (matched) {
+            for (let nc = c + 1; nc < grid[r].length; nc++) {
+              const val = grid[r][nc];
+              if (val !== null && val !== undefined && String(val).trim() !== '') {
+                return val;
+              }
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    // Procesar la pestaña Calc_Data
     function processCalcData(data) {
-      if (!data || !data.table || !data.table.rows) return;
-      const rows = data.table.rows;
+      const grid = buildGrid(data);
+      if (grid.length === 0) return;
 
-      // Filas y columnas basadas en 0-index:
-      setVal('kpi-hc', getVal(rows, 0, 6));          // G1 (Current HC)
-      setVal('kpi-altas', getVal(rows, 2, 6));       // G3 (Total Altas)
-      setVal('kpi-bajas', getVal(rows, 3, 6));       // G4 (Total Bajas)
-      setVal('kpi-edad', getVal(rows, 5, 6));        // G6 (Edad Promedio)
+      setVal('kpi-hc', getValueNextTo(grid, ['current hc', 'hc actual', 'hc']));
+      setVal('kpi-altas', getValueNextTo(grid, ['total altas', 'altas']));
+      setVal('kpi-bajas', getValueNextTo(grid, ['total bajas', 'bajas']));
+      setVal('kpi-edad', getValueNextTo(grid, ['edad promedio']));
 
-      // G7 = Fila 6 (7 - 1), Columna G (Col 6)
-      setVal('kpi-gen', getVal(rows, 6, 6));         // G7 (Millennials)
+      setVal('kpi-gen', getValueNextTo(grid, ['generación predominante', 'generacion predominante']));
+      setVal('kpi-genero', getValueNextTo(grid, ['género predominante', 'genero predominante']));
 
-      // V4 = Fila 3 (4 - 1), Columna V (Col 21)
-      setVal('kpi-genero', getVal(rows, 3, 21));     // V4 (Masculino)
-
-      // J7 y J8 = Columna J (Col 9)
-      const antProm = getVal(rows, 6, 9);            // J7
-      const antTend = getVal(rows, 7, 9);            // J8
+      const antProm = getValueNextTo(grid, ['promedio'], true);
+      const antTend = getValueNextTo(grid, ['tendencia'], true);
 
       if (antProm !== null) setVal('kpi-ant-prom', antProm, ' años');
       if (antTend !== null) setVal('kpi-ant-tend', antTend, ' años');
@@ -182,28 +225,27 @@
       if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
-    // 2. Procesar SoC por índices fijos de celdas
+    // Procesar la pestaña SoC
     function processSoCData(data) {
-      if (!data || !data.table || !data.table.rows) return;
-      const rows = data.table.rows;
+      const grid = buildGrid(data);
+      if (grid.length === 0) return;
 
-      setVal('kpi-contrib', getVal(rows, 3, 1));       // B4 (Contribuidor Individual)
-      setVal('kpi-lideres', getVal(rows, 4, 1));       // B5 (Líder)
-      setVal('kpi-total-contrib', getVal(rows, 5, 1)); // B6 (Suma Total)
+      setVal('kpi-contrib', getValueNextTo(grid, ['contribuidor individual', 'contribuidores individuales']));
+      setVal('kpi-lideres', getValueNextTo(grid, ['líder', 'lider', 'líderes']));
+      setVal('kpi-total-contrib', getValueNextTo(grid, ['suma total', 'total contribuidores']));
 
-      setVal('kpi-span-actual', getVal(rows, 3, 4));   // E4 (Soc Actual)
-      setVal('kpi-span-optimo', getVal(rows, 4, 4));   // E5 (Soc Óptimo)
+      setVal('kpi-span-actual', getValueNextTo(grid, ['soc actual', 'span of control actual']));
+      setVal('kpi-span-optimo', getValueNextTo(grid, ['soc óptimo', 'soc optimo', 'span of control óptimo']));
     }
 
     function syncLiveData() {
-      // Usamos el endpoint oficial JSONP gviz/tq con headers=0 para que tome la Fila 1 como datos
       const scriptCalc = document.createElement('script');
-      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&headers=0&tqx=responseHandler:processCalcData&t=${Date.now()}`;
+      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&tqx=responseHandler:processCalcData&t=${Date.now()}`;
       document.body.appendChild(scriptCalc);
       scriptCalc.onload = () => scriptCalc.remove();
 
       const scriptSoC = document.createElement('script');
-      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&headers=0&tqx=responseHandler:processSoCData&t=${Date.now()}`;
+      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&tqx=responseHandler:processSoCData&t=${Date.now()}`;
       document.body.appendChild(scriptSoC);
       scriptSoC.onload = () => scriptSoC.remove();
     }
