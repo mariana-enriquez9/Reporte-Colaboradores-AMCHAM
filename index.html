@@ -62,15 +62,15 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">HC Actual</span>
-            <span id="kpi-hc" class="kpi-value">70</span>
+            <span id="kpi-hc" class="kpi-value">...</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Altas (YTD)</span>
-            <span id="kpi-altas" class="kpi-value">8</span>
+            <span id="kpi-altas" class="kpi-value">...</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Bajas (YTD)</span>
-            <span id="kpi-bajas" class="kpi-value">10</span>
+            <span id="kpi-bajas" class="kpi-value">...</span>
           </div>
         </div>
         <div class="sub-title">Evolución HC Mensual</div>
@@ -83,11 +83,11 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Edad Promedio</span>
-            <span id="kpi-edad" class="kpi-value">38</span>
+            <span id="kpi-edad" class="kpi-value">...</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Generación Predominante</span>
-            <span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Millennials</span>
+            <span id="kpi-gen" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span>
           </div>
         </div>
         <div class="sub-title">Distribución por Generación</div>
@@ -104,11 +104,11 @@
         <div class="kpi-group">
           <div class="kpi-card">
             <span class="kpi-label">Promedio de Antigüedad</span>
-            <span id="kpi-ant-prom" class="kpi-value">6 años</span>
+            <span id="kpi-ant-prom" class="kpi-value">...</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Tendencia de Antigüedad</span>
-            <span id="kpi-ant-tend" class="kpi-value">1 años</span>
+            <span id="kpi-ant-tend" class="kpi-value">...</span>
           </div>
         </div>
         <div class="sub-title">Distribución de Antigüedad</div>
@@ -121,7 +121,7 @@
         <div class="kpi-group" style="max-width: 250px;">
           <div class="kpi-card">
             <span class="kpi-label">Género Predominante</span>
-            <span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">Masculino</span>
+            <span id="kpi-genero" class="kpi-value" style="font-size: 0.95rem; padding-top:4px;">...</span>
           </div>
         </div>
         <div class="sub-title">Distribución por Género</div>
@@ -177,7 +177,7 @@
 
   <script>
     const SPREADSHEET_ID = "1OivyubisQNd8fOvpgYQKLNXKARL6cOKBTsnNwYn17eQ";
-    const GID_CALC = "1138241088"; // GID de la pestaña Calc_Data
+    const GID_CALC = "1138241088";
 
     function switchSlide(slideNumber) {
       document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
@@ -194,7 +194,6 @@
       }
     }
 
-    // Callback de respuesta JSONP de la API de Google
     function processSheetResponse(data) {
       if (!data || !data.table || !data.table.rows) return;
       const rows = data.table.rows;
@@ -205,16 +204,16 @@
         return cell.f !== undefined ? cell.f : cell.v;
       };
 
-      // Extracción directa según coordenadas de Calc_Data:
-      setVal('kpi-hc', getVal(0, 6));           // Celda G1
-      setVal('kpi-altas', getVal(2, 6));        // Celda G3
-      setVal('kpi-bajas', getVal(3, 6));        // Celda G4
-      setVal('kpi-edad', getVal(5, 6));         // Celda G6
-      setVal('kpi-gen', getVal(6, 6));          // Celda G7
-      setVal('kpi-genero', getVal(4, 21));      // Celda V5
+      // Mapeo exacto habilitado por headers=0:
+      setVal('kpi-hc', getVal(0, 6));           // Celda G1 (HC Actual)
+      setVal('kpi-altas', getVal(2, 6));        // Celda G3 (Altas YTD)
+      setVal('kpi-bajas', getVal(3, 6));        // Celda G4 (Bajas YTD)
+      setVal('kpi-edad', getVal(5, 6));         // Celda G6 (Edad Promedio)
+      setVal('kpi-gen', getVal(6, 6));          // Celda G7 (Generación)
+      setVal('kpi-genero', getVal(4, 21));      // Celda V5 (Género)
 
-      const antProm = getVal(6, 10);            // Celda K7
-      const antTend = getVal(7, 10);            // Celda K8
+      const antProm = getVal(6, 10);            // Celda K7 (Promedio Antigüedad)
+      const antTend = getVal(7, 10);            // Celda K8 (Tendencia Antigüedad)
       if (antProm !== null) setVal('kpi-ant-prom', `${antProm} años`);
       if (antTend !== null) setVal('kpi-ant-tend', `${antTend} años`);
 
@@ -225,15 +224,15 @@
 
     function syncLiveData() {
       const script = document.createElement('script');
-      // Petición JSONP segura que evade el bloqueo de CORS en GitHub Pages
-      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${GID_CALC}&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
+      // Forzamos a no consumir la Fila 1 como encabezados usando headers=0
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${GID_CALC}&headers=0&tqx=responseHandler:processSheetResponse&t=${Date.now()}`;
       document.body.appendChild(script);
       script.onload = () => script.remove();
     }
 
     window.onload = () => {
       syncLiveData();
-      setInterval(syncLiveData, 30000); // Consulta actualización cada 30 segundos
+      setInterval(syncLiveData, 15000);
     };
   </script>
 
