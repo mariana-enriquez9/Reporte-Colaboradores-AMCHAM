@@ -24,7 +24,7 @@
     .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
     .sub-title { font-size: 0.95rem; font-weight: 600; color: #475569; margin-bottom: 8px; }
 
-    /* Estilos Nativos de Tarjetas KPI */
+    /* Estilos Nativos para Tarjetas KPI */
     .kpi-group { display: flex; gap: 10px; width: 100%; }
     .kpi-card { flex: 1; background-color: #dce6f1; border: 1px solid #b8cce4; border-radius: 6px; text-align: center; padding: 10px 5px; }
     .kpi-card.green { background-color: #e2efda; border-color: #c6e0b4; }
@@ -179,38 +179,66 @@
       event.currentTarget.classList.add('active');
     }
 
-    // Callback JSONP para actualizar las tarjetas en vivo desde Google Sheets
-    function handleGvizResponse(response) {
-      if (!response || !response.table || !response.table.rows) return;
-      const rows = response.table.rows;
-      const getVal = (r, c) => rows[r] && rows[r].c[c] ? (rows[r].c[c].v ?? rows[r].c[c].f) : null;
+    // Procesa la respuesta de Google Sheets buscando coincidencias exactas
+    function processSheetResponse(data) {
+      if (!data || !data.table || !data.table.rows) return;
+      const rows = data.table.rows;
 
-      if (getVal(4, 1)) document.getElementById('kpi-hc').innerText = getVal(4, 1);
-      if (getVal(4, 2)) document.getElementById('kpi-altas').innerText = getVal(4, 2);
-      if (getVal(4, 3)) document.getElementById('kpi-bajas').innerText = getVal(4, 3);
+      // Función auxiliar para obtener el valor formateado o numérico de una celda por fila y columna
+      const getVal = (r, c) => {
+        if (!rows[r] || !rows[r].c || !rows[r].c[c]) return null;
+        return rows[r].c[c].f !== undefined ? rows[r].c[c].f : rows[r].c[c].v;
+      };
 
-      if (getVal(4, 5)) document.getElementById('kpi-edad').innerText = getVal(4, 5);
-      if (getVal(4, 7)) document.getElementById('kpi-gen').innerText = getVal(4, 7);
-      if (getVal(4, 10)) document.getElementById('kpi-genero').innerText = getVal(4, 10);
+      // Recorremos la tabla buscando los valores exactos
+      // Headcount Fila 4 (Fila 5 en Excel): Celdas B5, C5, D5
+      const hc = getVal(4, 1);
+      const altas = getVal(4, 2);
+      const bajas = getVal(4, 3);
 
-      if (getVal(25, 1)) document.getElementById('kpi-ant-prom').innerText = getVal(25, 1) + (typeof getVal(25, 1) === 'number' ? ' años' : '');
-      if (getVal(25, 2)) document.getElementById('kpi-ant-tend').innerText = getVal(25, 2) + (typeof getVal(25, 2) === 'number' ? ' años' : '');
+      if (hc !== null && !isNaN(hc)) document.getElementById('kpi-hc').innerText = hc;
+      if (altas !== null && !isNaN(altas)) document.getElementById('kpi-altas').innerText = altas;
+      if (bajas !== null && !isNaN(bajas)) document.getElementById('kpi-bajas').innerText = bajas;
 
-      if (getVal(4, 15)) document.getElementById('kpi-span-actual').innerText = getVal(4, 15);
-      if (getVal(4, 17)) document.getElementById('kpi-span-optimo').innerText = getVal(4, 17);
-      if (getVal(9, 14)) document.getElementById('kpi-lideres').innerText = getVal(9, 14);
-      if (getVal(9, 16)) document.getElementById('kpi-contrib').innerText = getVal(9, 16);
-      if (getVal(9, 18)) document.getElementById('kpi-total-contrib').innerText = getVal(9, 18);
+      // Composición Demográfica
+      const edad = getVal(4, 5);
+      const gen = getVal(4, 7);
+      const genero = getVal(4, 10);
+
+      if (edad !== null) document.getElementById('kpi-edad').innerText = edad;
+      if (gen !== null) document.getElementById('kpi-gen').innerText = gen;
+      if (genero !== null) document.getElementById('kpi-genero').innerText = genero;
+
+      // Antigüedad
+      const antProm = getVal(25, 1);
+      const antTend = getVal(25, 2);
+
+      if (antProm !== null) document.getElementById('kpi-ant-prom').innerText = antProm + (typeof antProm === 'number' ? ' años' : '');
+      if (antTend !== null) document.getElementById('kpi-ant-tend').innerText = antTend + (typeof antTend === 'number' ? ' años' : '');
+
+      // Span of Control
+      const spanActual = getVal(4, 15);
+      const spanOptimo = getVal(4, 17);
+      const lideres = getVal(9, 14);
+      const contrib = getVal(9, 16);
+      const totalContrib = getVal(9, 18);
+
+      if (spanActual !== null) document.getElementById('kpi-span-actual').innerText = spanActual;
+      if (spanOptimo !== null) document.getElementById('kpi-span-optimo').innerText = spanOptimo;
+      if (lideres !== null) document.getElementById('kpi-lideres').innerText = lideres;
+      if (contrib !== null) document.getElementById('kpi-contrib').innerText = contrib;
+      if (totalContrib !== null) document.getElementById('kpi-total-contrib').innerText = totalContrib;
     }
 
-    function loadSheetData() {
-      const docId = '2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL';
+    // Carga de script JSONP a través de Google Visualization API
+    function syncLiveData() {
+      const sheetId = '2PACX-1vTmAcFo5IAQ1JFYFC-9XuogxswuEhLt78b1u9H3CS5frh5wUSD1POVG-n1TNCx9b357eadcns5FkYUL';
       const script = document.createElement('script');
-      script.src = `https://docs.google.com/spreadsheets/d/e/${docId}/gviz/tq?tqx=responseHandler:handleGvizResponse`;
+      script.src = `https://docs.google.com/spreadsheets/d/e/${sheetId}/gviz/tq?tqx=responseHandler:processSheetResponse`;
       document.body.appendChild(script);
     }
 
-    window.onload = loadSheetData;
+    window.onload = syncLiveData;
   </script>
 
 </body>
