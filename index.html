@@ -147,65 +147,72 @@
       }
     }
 
+    // Función segura para extraer la celda (el parámetro range=A1:Z50 garantiza que los índices sean exactos)
     function getVal(rows, r, c) {
       if (!rows || !rows[r] || !rows[r].c || !rows[r].c[c]) return null;
       const cell = rows[r].c[c];
       return cell.f !== undefined ? cell.f : cell.v;
     }
 
-    // 1. Procesa `Calc_Data` con tus índices EXACTOS
+    // ==========================================
+    // 1. Procesamiento exacto de 'Calc_Data'
+    // ==========================================
     function processCalcData(data) {
       if (!data || !data.table || !data.table.rows) return;
       const rows = data.table.rows;
 
-      setVal('kpi-hc', getVal(rows, 0, 6));        // G1 (HC Actual)
-      setVal('kpi-altas', getVal(rows, 2, 6));     // G3 (Altas YTD)
-      setVal('kpi-bajas', getVal(rows, 3, 6));     // G4 (Bajas YTD)
-      setVal('kpi-edad', getVal(rows, 5, 6));      // G6 (Edad Promedio)
-
-      setVal('kpi-gen', getVal(rows, 6, 6));       // G7 (Generación Predominante) 
-      setVal('kpi-ant-prom', getVal(rows, 6, 9), ' años'); // J7 (Promedio de Antigüedad)
-      setVal('kpi-ant-tend', getVal(rows, 7, 9), ' años'); // J8 (Tendencia de Antigüedad)
-
-      setVal('kpi-genero', getVal(rows, 3, 21));   // V4 (Género Predominante)
+      // Nota: Fila 1 en Excel = índice 0 | Columna A = índice 0
+      setVal('kpi-hc',       getVal(rows, 0, 6)); // Celda G1 (Fila 1, Columna G)
+      setVal('kpi-altas',    getVal(rows, 2, 6)); // Celda G3 (Fila 3, Columna G)
+      setVal('kpi-bajas',    getVal(rows, 3, 6)); // Celda G4 (Fila 4, Columna G)
+      setVal('kpi-edad',     getVal(rows, 5, 6)); // Celda G6 (Fila 6, Columna G)
+      setVal('kpi-gen',      getVal(rows, 6, 6)); // Celda G7 (Fila 7, Columna G)
+      
+      setVal('kpi-ant-prom', getVal(rows, 6, 9), ' años'); // Celda J7 (Fila 7, Columna J)
+      setVal('kpi-ant-tend', getVal(rows, 7, 9), ' años'); // Celda J8 (Fila 8, Columna J)
+      
+      setVal('kpi-genero',   getVal(rows, 3, 21)); // Celda V4 (Fila 4, Columna V)
 
       const now = new Date();
       const updateEl = document.getElementById('last-update');
       if (updateEl) updateEl.innerText = `Sincronizado ${now.toLocaleTimeString('es-MX')}`;
     }
 
-    // 2. Procesa `SoC` con índices EXACTOS
+    // ==========================================
+    // 2. Procesamiento exacto de 'SoC'
+    // ==========================================
     function processSoCData(data) {
       if (!data || !data.table || !data.table.rows) return;
       const rows = data.table.rows;
 
-      // SoC: B4 (Fila 3, Col 1), E4 (Fila 3, Col 4)
-      setVal('kpi-contrib', getVal(rows, 3, 1));      
-      setVal('kpi-span-actual', getVal(rows, 3, 4));  
-
-      // SoC: B5 (Fila 4, Col 1), E5 (Fila 4, Col 4)
-      setVal('kpi-lideres', getVal(rows, 4, 1));      
-      setVal('kpi-span-optimo', getVal(rows, 4, 4));  
-
-      // SoC: B6 (Fila 5, Col 1)
-      setVal('kpi-total-contrib', getVal(rows, 5, 1));
+      setVal('kpi-contrib',       getVal(rows, 3, 1)); // Celda B4 (Fila 4, Columna B)
+      setVal('kpi-lideres',       getVal(rows, 4, 1)); // Celda B5 (Fila 5, Columna B)
+      setVal('kpi-total-contrib', getVal(rows, 5, 1)); // Celda B6 (Fila 6, Columna B)
+      
+      setVal('kpi-span-actual',   getVal(rows, 3, 4)); // Celda E4 (Fila 4, Columna E)
+      setVal('kpi-span-optimo',   getVal(rows, 4, 4)); // Celda E5 (Fila 5, Columna E)
     }
 
+    // ==========================================
+    // Sincronización Forzando la Cuadrícula A1:Z50
+    // ==========================================
     function syncLiveData() {
+      // Petición a Calc_Data forzando cuadrícula A1:Z50
       const scriptCalc = document.createElement('script');
-      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&headers=0&tqx=responseHandler:processCalcData&t=${Date.now()}`;
+      scriptCalc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=Calc_Data&range=A1:Z50&headers=0&tqx=responseHandler:processCalcData&t=${Date.now()}`;
       document.body.appendChild(scriptCalc);
       scriptCalc.onload = () => scriptCalc.remove();
 
+      // Petición a SoC forzando cuadrícula A1:Z50
       const scriptSoC = document.createElement('script');
-      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&headers=0&tqx=responseHandler:processSoCData&t=${Date.now()}`;
+      scriptSoC.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=SoC&range=A1:Z50&headers=0&tqx=responseHandler:processSoCData&t=${Date.now()}`;
       document.body.appendChild(scriptSoC);
       scriptSoC.onload = () => scriptSoC.remove();
     }
 
     window.onload = () => {
       syncLiveData();
-      setInterval(syncLiveData, 15000); // 15 segundos para actualización rápida
+      setInterval(syncLiveData, 15000); // Se actualiza cada 15 segundos
     };
   </script>
 
