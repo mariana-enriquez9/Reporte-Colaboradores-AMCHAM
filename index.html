@@ -141,6 +141,18 @@
       }
     }
 
+    // Quita acentos/diacríticos y normaliza espacios, para que "Género" === "Genero"
+    // sin importar cómo Google Sheets serialice los caracteres (NFC vs NFD),
+    // mayúsculas, o espacios extra.
+    function normalizeText(s) {
+      return String(s)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // elimina marcas diacríticas (acentos)
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
     // Unifica encabezados (cols) y filas (rows) en una matriz 2D limpia
     function buildGrid(data) {
       if (!data || !data.table) return [];
@@ -173,16 +185,18 @@
       return grid;
     }
 
-    // Busca un texto de etiqueta en toda la matriz y devuelve el primer valor no nulo a su derecha
+    // Busca un texto de etiqueta en toda la matriz y devuelve el primer valor no nulo a su derecha.
+    // exactMatchOnly=true evita "falsos positivos" por coincidencias parciales
+    // (p. ej. que "Edad Promedio" enganche la búsqueda de "Promedio").
     function getValueNextTo(grid, labels, exactMatchOnly = false) {
-      const keywords = (Array.isArray(labels) ? labels : [labels]).map(k => String(k).toLowerCase().trim());
+      const keywords = (Array.isArray(labels) ? labels : [labels]).map(normalizeText);
 
       for (let r = 0; r < grid.length; r++) {
         if (!grid[r]) continue;
         for (let c = 0; c < grid[r].length; c++) {
           const cellVal = grid[r][c];
           if (cellVal === null || cellVal === undefined) continue;
-          const str = String(cellVal).toLowerCase().trim();
+          const str = normalizeText(cellVal);
 
           const matched = keywords.some(kw => {
             return exactMatchOnly ? str === kw : (str === kw || (kw.length > 4 && str.includes(kw)));
@@ -209,10 +223,12 @@
       setVal('kpi-hc', getValueNextTo(grid, ['current hc', 'hc actual', 'hc']));
       setVal('kpi-altas', getValueNextTo(grid, ['total altas', 'altas']));
       setVal('kpi-bajas', getValueNextTo(grid, ['total bajas', 'bajas']));
-      setVal('kpi-edad', getValueNextTo(grid, ['edad promedio']));
+      setVal('kpi-edad', getValueNextTo(grid, ['edad promedio'], true));
 
-      setVal('kpi-gen', getValueNextTo(grid, ['generación predominante', 'generacion predominante']));
-      setVal('kpi-genero', getValueNextTo(grid, ['género predominante', 'genero predominante']));
+      // Coincidencia exacta: evita que "Promedio" o "Predominante" sueltos
+      // en otra sección de la hoja (p. ej. antigüedad) contaminen el resultado.
+      setVal('kpi-gen', getValueNextTo(grid, ['generacion predominante'], true));
+      setVal('kpi-genero', getValueNextTo(grid, ['genero predominante'], true));
 
       const antProm = getValueNextTo(grid, ['promedio'], true);
       const antTend = getValueNextTo(grid, ['tendencia'], true);
@@ -231,11 +247,11 @@
       if (grid.length === 0) return;
 
       setVal('kpi-contrib', getValueNextTo(grid, ['contribuidor individual', 'contribuidores individuales']));
-      setVal('kpi-lideres', getValueNextTo(grid, ['líder', 'lider', 'líderes']));
+      setVal('kpi-lideres', getValueNextTo(grid, ['lider', 'lideres']));
       setVal('kpi-total-contrib', getValueNextTo(grid, ['suma total', 'total contribuidores']));
 
       setVal('kpi-span-actual', getValueNextTo(grid, ['soc actual', 'span of control actual']));
-      setVal('kpi-span-optimo', getValueNextTo(grid, ['soc óptimo', 'soc optimo', 'span of control óptimo']));
+      setVal('kpi-span-optimo', getValueNextTo(grid, ['soc optimo', 'span of control optimo']));
     }
 
     function syncLiveData() {
